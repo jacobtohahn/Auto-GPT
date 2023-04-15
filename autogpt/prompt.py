@@ -69,7 +69,7 @@ def get_prompt() -> str:
 
         ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
         ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
-        ("Do Nothing", "do_nothing", {}),
+    #    ("Do Nothing", "do_nothing", {}),
     ]
 
     # Add commands to the PromptGenerator object

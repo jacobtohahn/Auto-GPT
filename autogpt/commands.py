@@ -132,8 +132,8 @@ def execute_command(command_name, arguments):
             return f"What follows is a summary of all files and folders in the working directory:\n\n{summarize_resources()}"
         
         # Silly AI Stuff
-        elif command_name == "do_nothing":
-            return "No action performed."
+#        elif command_name == "do_nothing":
+#            return "No action performed."
         elif command_name == "task_complete":
             shutdown()
         else:
