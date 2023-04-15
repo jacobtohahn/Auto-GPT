@@ -379,7 +379,7 @@ def main():
     next_action_count = 0
     # Make a constant:
     user_input = f"Determine which next command to use, and respond using"
-    f" JSON and only JSON. Your current file directory is:\n"
+    f" JSON and only JSON. Your current files are:\n"
     f"{str(file_operations.search_files('./'))}"
     # Initialize memory and make sure it is empty.
     # this is particularly important for indexing and referencing pinecone memory
