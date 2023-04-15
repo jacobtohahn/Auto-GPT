@@ -255,7 +255,6 @@ def search_files(directory: str) -> List[str]:
         List[str]: A list of files found in the directory
     """
     found_files = []
-    empty_dirs = []
 
     if directory in {"", "/"}:
         search_directory = WORKING_DIRECTORY
@@ -271,12 +270,8 @@ def search_files(directory: str) -> List[str]:
                 continue
             relative_path = os.path.relpath(os.path.join(root, file), WORKING_DIRECTORY)
             found_files.append(relative_path)
-        
-        if not len(dirs) and not len(files):
-            relative_path = os.path.relpath(os.path.join(root), WORKING_DIRECTORY)
-            empty_dirs.append(relative_path)
 
-    return [f"Files: {str(found_files)}", f"Empty Directories: {str(empty_dirs)}"]
+    return found_files
 
 def create_directory(directory):
     try:
