@@ -32,13 +32,16 @@ def get_prompt() -> str:
     )
     prompt_generator.add_constraint("No user assistance")
     prompt_generator.add_constraint(
-        'Exclusively use the commands listed in double quotes e.g. "command name"'
+        'Exclusively use a valid command listed in double quotes e.g. "command name"'
     )
     prompt_generator.add_constraint(
-        "All content should be written in .md files using Markdown formatting unless a .csv file is warranted."
+        "All content should be written in .md files using Markdown formatting unless a .csv file is warranted or you are creating a directory."
     )
     prompt_generator.add_constraint(
-        "Directories should not have file extensions."
+        "All responses must be in JSON and only JSON."
+    )
+    prompt_generator.add_constraint(
+        "Do not create new files with the same content as existing files."
     )
 
     # Define the command list
