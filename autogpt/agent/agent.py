@@ -10,6 +10,7 @@ from autogpt.logs import logger, print_assistant_thoughts
 from autogpt.speech import say_text
 from autogpt.spinner import Spinner
 from autogpt.utils import clean_input
+from autogpt.commands.file_operations import search_files
 
 
 class Agent:
@@ -64,7 +65,7 @@ class Agent:
             with Spinner("Thinking... "):
                 assistant_reply = chat_with_ai(
                     self.prompt,
-                    self.user_input,
+                    self.user_input+ f". Your current files are: {str(search_files('./'))}",
                     self.full_message_history,
                     self.memory,
                     cfg.fast_token_limit,
