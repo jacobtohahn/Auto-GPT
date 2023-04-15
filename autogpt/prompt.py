@@ -120,9 +120,9 @@ def get_prompt() -> str:
         )
 
     # Add these command last.
-    commands.append(
-        ("Do Nothing", "do_nothing", {}),
-    )
+    # commands.append(
+    #     ("Do Nothing", "do_nothing", {}),
+    # )
     commands.append(
         ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
     )
