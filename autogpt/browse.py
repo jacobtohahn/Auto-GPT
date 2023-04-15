@@ -145,9 +145,10 @@ def create_message(chunk, question):
     """Create a message for the user to summarize a chunk of text"""
     return {
         "role": "user",
-        "content": f'"""{chunk}""" Using the above text, please answer the following'
-        f' question: "{question}" -- if the question cannot be answered using the'
-        " text, please summarize the text.",
+        "content": f"\"\"\"{chunk}\"\"\" Using the above text, please answer the following"
+        " question in great detail: \"{question}\" -- if the question cannot be answered using the"
+        " text, please summarize the text in great detail. If the above text contains a HTTP error,"
+        " respond by clearly stating which error occurred and say 'The URL is invalid'."
     }
 
 

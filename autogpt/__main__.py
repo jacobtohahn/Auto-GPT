@@ -8,6 +8,7 @@ from colorama import Fore, Style
 from autogpt import chat
 from autogpt import commands as cmd
 from autogpt import speak, utils
+from autogpt import file_operations
 from autogpt.ai_config import AIConfig
 from autogpt.config import Config
 from autogpt.json_parser import fix_and_parse_json
@@ -377,10 +378,9 @@ def main():
     full_message_history = []
     next_action_count = 0
     # Make a constant:
-    user_input = (
-        "Determine which next command to use, and respond using the"
-        " format specified above:"
-    )
+    user_input = f"Determine which next command to use, and respond using"
+    f" JSON and only JSON. Your current file directory is:\n"
+    f"{str(file_operations.search_files('./'))}"
     # Initialize memory and make sure it is empty.
     # this is particularly important for indexing and referencing pinecone memory
     memory = get_memory(cfg, init=True)

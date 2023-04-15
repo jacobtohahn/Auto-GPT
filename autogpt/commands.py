@@ -107,14 +107,14 @@ def execute_command(command_name, arguments):
         # TODO: Change these to take in a file rather than pasted code, if
         # non-file is given, return instructions "Input should be a python
         # filepath, write your code to file and try again"
-        elif command_name == "evaluate_code":
-            return evaluate_code(arguments["code"])
-        elif command_name == "improve_code":
-            return improve_code(arguments["suggestions"], arguments["code"])
-        elif command_name == "write_tests":
-            return write_tests(arguments["code"], arguments.get("focus"))
-        elif command_name == "execute_python_file":  # Add this command
-            return execute_python_file(arguments["file"])
+#       elif command_name == "evaluate_code":
+#           return evaluate_code(arguments["code"])
+#       elif command_name == "improve_code":
+#           return improve_code(arguments["suggestions"], arguments["code"])
+#       elif command_name == "write_tests":
+#           return write_tests(arguments["code"], arguments.get("focus"))
+#       elif command_name == "execute_python_file":  # Add this command
+#           return execute_python_file(arguments["file"])
         elif command_name == "execute_shell":
             if cfg.execute_local_commands:
                 return execute_shell(arguments["command_line"])
@@ -124,10 +124,10 @@ def execute_command(command_name, arguments):
                     " shell commands, EXECUTE_LOCAL_COMMANDS must be set to 'True' "
                     "in your config. Do not attempt to bypass the restriction."
                 )
-        elif command_name == "generate_image":
-            return generate_image(arguments["prompt"])
-        elif command_name == "do_nothing":
-            return "No action performed."
+#       elif command_name == "generate_image":
+#           return generate_image(arguments["prompt"])
+#       elif command_name == "do_nothing":
+#           return "No action performed."
         elif command_name == "task_complete":
             shutdown()
         else:
@@ -229,6 +229,9 @@ def start_agent(name, task, prompt, model=cfg.fast_llm_model):
     # Remove underscores from name
     voice_name = name.replace("_", " ")
 
+    intro = f"""You are an agent helping to assist a central AI program with a given task.
+                 The central AI may not understand your limitations and capabilities, so you must be explicit and clear in your response to the central AI.
+                 If you do not have enough context to assist, let the central AI know the specific information that you need to assist properly."""
     first_message = f"""You are {name}.  Respond with: "Acknowledged"."""
     agent_intro = f"{voice_name} here, Reporting for duty!"
 
@@ -240,6 +243,8 @@ def start_agent(name, task, prompt, model=cfg.fast_llm_model):
     if cfg.speak_mode:
         say_text(f"Hello {voice_name}. Your task is as follows. {task}.")
 
+    # Message the agent the intro message
+    message_agent(key, intro)
     # Assign task (prompt), get response
     agent_response = agents.message_agent(key, prompt)
 
@@ -251,11 +256,8 @@ def message_agent(key, message):
     # Check if the key is a valid integer
     if is_valid_int(key):
         agent_response = agents.message_agent(int(key), message)
-    # Check if the key is a valid string
-    elif isinstance(key, str):
-        agent_response = agents.message_agent(key, message)
     else:
-        return "Invalid key, must be an integer or a string."
+        return "Invalid key, must be an integer."
 
     # Speak response
     if cfg.speak_mode:
