@@ -68,15 +68,16 @@ def split_file(content, max_length=4000, overlap=0):
 def read_file(filename) -> str:
     """Read a file and return the contents"""
     try:
+        formatted_filename = format_filename(filename)
+        filepath = safe_join(working_directory, formatted_filename)
         # Check if the file is a PDF and extract text if so
-        if is_pdf(filename):
+        if is_pdf(filepath):
             text = extract_text(filepath)
             if not text:
                 return "Error: Could not extract text from PDF"
             else:
                 return text
         else:
-            formatted_filename = format_filename(filename)
             filepath = safe_join(working_directory, formatted_filename)
             with open(filepath, "r", encoding='utf-8') as f:
                 content = f.read()
