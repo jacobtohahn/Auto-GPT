@@ -114,7 +114,7 @@ def execute_command(command_name: str, arguments):
                 google_result = google_official_search(arguments["input"])
             else:
                 google_result = google_search(arguments["input"])
-            safe_message = google_result.encode('utf-8', 'ignore')
+            safe_message = [result.encode('utf-8', 'ignore') for result in google_result]
             return str(safe_message)
         elif command_name == "memory_add":
             return memory.add(arguments["string"])

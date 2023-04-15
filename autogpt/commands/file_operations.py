@@ -91,7 +91,7 @@ def read_file(filename: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
-        filepath = safe_join(working_directory, formatted_filename)
+        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
         # Check if the file is a PDF and extract text if so
         if is_pdf(filepath):
             text = extract_text(filepath)
@@ -100,7 +100,7 @@ def read_file(filename: str) -> str:
             else:
                 return text
         else:
-            filepath = safe_join(working_directory, formatted_filename)
+            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
             with open(filepath, "r", encoding='utf-8') as f:
                 content = f.read()
             return content
@@ -154,7 +154,7 @@ def write_to_file(filename: str, text: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
-        filepath = safe_join(working_directory, formatted_filename)
+        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
         directory = os.path.dirname(filepath)
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -177,7 +177,7 @@ def append_to_file(filename: str, text: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
-        filepath = safe_join(working_directory, formatted_filename)
+        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
         with open(filepath, "a") as f:
             f.write(text)
         return "Text appended to " + filename + " successfully."
@@ -196,7 +196,7 @@ def delete_file(filename: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
-        filepath = safe_join(working_directory, formatted_filename)
+        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
         os.remove(filepath)
         return "File "  + filename + " deleted successfully."
     except Exception as e:
@@ -206,8 +206,8 @@ def delete_file(filename: str) -> str:
 def copy_file(src_filename, dest_directory):
     try:
         formatted_src_filename = format_filename(src_filename)
-        src_filepath = safe_join(working_directory, formatted_src_filename)
-        dest_directory_path = safe_join(working_directory, dest_directory)
+        src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+        dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
         dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
 
         if not os.path.exists(dest_directory_path):
@@ -221,8 +221,8 @@ def copy_file(src_filename, dest_directory):
 def move_file(src_filename, dest_directory):
     try:
         formatted_src_filename = format_filename(src_filename)
-        src_filepath = safe_join(working_directory, formatted_src_filename)
-        dest_directory_path = safe_join(working_directory, dest_directory)
+        src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+        dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
         dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
 
         if not os.path.exists(dest_directory_path):
@@ -237,8 +237,8 @@ def rename_file(old_filename, new_filename):
     try:
         old_formatted_filename = format_filename(old_filename)
         new_formatted_filename = format_filename(new_filename)
-        old_filepath = safe_join(working_directory, old_formatted_filename)
-        new_filepath = safe_join(working_directory, new_formatted_filename)
+        old_filepath = safe_join(WORKING_DIRECTORY, old_formatted_filename)
+        new_filepath = safe_join(WORKING_DIRECTORY, new_formatted_filename)
 
         os.rename(old_filepath, new_filepath)
         return "File renamed successfully."
@@ -255,6 +255,7 @@ def search_files(directory: str) -> List[str]:
         List[str]: A list of files found in the directory
     """
     found_files = []
+    empty_dirs = []
 
     if directory in {"", "/"}:
         search_directory = WORKING_DIRECTORY
@@ -264,18 +265,22 @@ def search_files(directory: str) -> List[str]:
     if not os.path.isdir(search_directory):
         return "Error: directory does not exist"
 
-    for root, _, files in os.walk(search_directory):
+    for root, dirs, files in os.walk(search_directory):
         for file in files:
             if file.startswith("."):
                 continue
             relative_path = os.path.relpath(os.path.join(root, file), WORKING_DIRECTORY)
             found_files.append(relative_path)
+        
+        if not len(dirs) and not len(files):
+            relative_path = os.path.relpath(os.path.join(root), WORKING_DIRECTORY)
+            empty_dirs.append(relative_path)
 
-    return found_files
+    return [f"Files: {str(found_files)}", f"Empty Directories: {str(empty_dirs)}"]
 
 def create_directory(directory):
     try:
-        dir_path = safe_join(working_directory, directory)
+        dir_path = safe_join(WORKING_DIRECTORY, directory)
         os.makedirs(dir_path, exist_ok=True)
         return f"Directory '{directory}' created successfully."
     except Exception as e:
@@ -283,7 +288,7 @@ def create_directory(directory):
 
 def list_resources(directory=None):
     if directory is None:
-        directory = working_directory
+        directory = WORKING_DIRECTORY
         
     resource_list = []
 
@@ -305,7 +310,7 @@ def resources_to_string(resource_list):
     return resources_string
 
 def summarize_resources():
-    return f"Summary of contents:\n{summarize_contents(working_directory)}\n\nResource file map:\n{(list_resources())}"
+    return f"Summary of contents:\n{summarize_contents(WORKING_DIRECTORY)}\n\nResource file map:\n{(list_resources())}"
 
 def get_directory_summary(directory):
     summary = []
