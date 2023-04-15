@@ -1,20 +1,33 @@
+"""File operations for AutoGPT"""
 import os
 import os.path
+from pathlib import Path
+from typing import Generator, List
 
 from autogpt.smart_utils import summarize_contents
 
 from pdfminer.high_level import extract_text
 
 # Set a dedicated folder for file I/O
-working_directory = "auto_gpt_workspace"
+WORKING_DIRECTORY = Path(__file__).parent.parent / "auto_gpt_workspace"
 
 # Create the directory if it doesn't exist
-if not os.path.exists(working_directory):
-    os.makedirs(working_directory)
+if not os.path.exists(WORKING_DIRECTORY):
+    os.makedirs(WORKING_DIRECTORY)
+
+WORKING_DIRECTORY = str(WORKING_DIRECTORY)
 
 
-def safe_join(base, *paths):
-    """Join one or more path components intelligently."""
+def safe_join(base: str, *paths) -> str:
+    """Join one or more path components intelligently.
+
+    Args:
+        base (str): The base path
+        *paths (str): The paths to join to the base path
+
+    Returns:
+        str: The joined path
+    """
     new_path = os.path.join(base, *paths)
     norm_new_path = os.path.normpath(new_path)
 
@@ -40,7 +53,9 @@ def format_filename(filename):
     
     return formatted_filename
 
-def split_file(content, max_length=4000, overlap=0):
+def split_file(
+    content: str, max_length: int = 4000, overlap: int = 0
+) -> Generator[str, None, None]:
     """
     Split text into chunks of a specified maximum length with a specified overlap
     between chunks.
@@ -65,8 +80,15 @@ def split_file(content, max_length=4000, overlap=0):
         start += max_length - overlap
 
 
-def read_file(filename) -> str:
-    """Read a file and return the contents"""
+def read_file(filename: str) -> str:
+    """Read a file and return the contents
+
+    Args:
+        filename (str): The name of the file to read
+
+    Returns:
+        str: The contents of the file
+    """
     try:
         formatted_filename = format_filename(filename)
         filepath = safe_join(working_directory, formatted_filename)
@@ -86,7 +108,9 @@ def read_file(filename) -> str:
         return f"Error: {str(e)}"
 
 
-def ingest_file(filename, memory, max_length=4000, overlap=200):
+def ingest_file(
+    filename: str, memory, max_length: int = 4000, overlap: int = 200
+) -> None:
     """
     Ingest a file by reading its content, splitting it into chunks with a specified
     maximum length and overlap, and adding the chunks to the memory storage.
@@ -118,8 +142,16 @@ def ingest_file(filename, memory, max_length=4000, overlap=200):
         print(f"Error while ingesting file '{filename}': {str(e)}")
 
 
-def write_to_file(filename, text):
-    """Write text to a file"""
+def write_to_file(filename: str, text: str) -> str:
+    """Write text to a file
+
+    Args:
+        filename (str): The name of the file to write to
+        text (str): The text to write to the file
+
+    Returns:
+        str: A message indicating success or failure
+    """
     try:
         formatted_filename = format_filename(filename)
         filepath = safe_join(working_directory, formatted_filename)
@@ -130,11 +162,19 @@ def write_to_file(filename, text):
             f.write(text)
         return "File " + filename + " written to successfully."
     except Exception as e:
-        return "Error: " + str(e)
+        return f"Error: {str(e)}"
 
 
-def append_to_file(filename, text):
-    """Append text to a file"""
+def append_to_file(filename: str, text: str) -> str:
+    """Append text to a file
+
+    Args:
+        filename (str): The name of the file to append to
+        text (str): The text to append to the file
+
+    Returns:
+        str: A message indicating success or failure
+    """
     try:
         formatted_filename = format_filename(filename)
         filepath = safe_join(working_directory, formatted_filename)
@@ -142,11 +182,18 @@ def append_to_file(filename, text):
             f.write(text)
         return "Text appended to " + filename + " successfully."
     except Exception as e:
-        return "Error: " + str(e)
+        return f"Error: {str(e)}"
 
 
-def delete_file(filename):
-    """Delete a file"""
+def delete_file(filename: str) -> str:
+    """Delete a file
+
+    Args:
+        filename (str): The name of the file to delete
+
+    Returns:
+        str: A message indicating success or failure
+    """
     try:
         formatted_filename = format_filename(filename)
         filepath = safe_join(working_directory, formatted_filename)
@@ -184,7 +231,7 @@ def move_file(src_filename, dest_directory):
         os.rename(src_filepath, dest_filepath)
         return "File moved successfully."
     except Exception as e:
-        return "Error: " + str(e)
+        return f"Error: {str(e)}"
 
 def rename_file(old_filename, new_filename):
     try:
@@ -198,13 +245,21 @@ def rename_file(old_filename, new_filename):
     except Exception as e:
         return "Error: " + str(e)
 
-def search_files(directory):
+def search_files(directory: str) -> List[str]:
+    """Search for files in a directory
+
+    Args:
+        directory (str): The directory to search in
+
+    Returns:
+        List[str]: A list of files found in the directory
+    """
     found_files = []
 
-    if directory == "" or directory == "/":
-        search_directory = working_directory
+    if directory in {"", "/"}:
+        search_directory = WORKING_DIRECTORY
     else:
-        search_directory = safe_join(working_directory, directory)
+        search_directory = safe_join(WORKING_DIRECTORY, directory)
 
     if not os.path.isdir(search_directory):
         return "Error: directory does not exist"
@@ -213,7 +268,7 @@ def search_files(directory):
         for file in files:
             if file.startswith("."):
                 continue
-            relative_path = os.path.relpath(os.path.join(root, file), working_directory)
+            relative_path = os.path.relpath(os.path.join(root, file), WORKING_DIRECTORY)
             found_files.append(relative_path)
 
     return found_files
