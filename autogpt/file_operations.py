@@ -3,6 +3,8 @@ import os.path
 
 from autogpt.smart_utils import summarize_contents
 
+from pdfminer.high_level import extract_text
+
 # Set a dedicated folder for file I/O
 working_directory = "auto_gpt_workspace"
 
@@ -66,11 +68,19 @@ def split_file(content, max_length=4000, overlap=0):
 def read_file(filename) -> str:
     """Read a file and return the contents"""
     try:
-        formatted_filename = format_filename(filename)
-        filepath = safe_join(working_directory, formatted_filename)
-        with open(filepath, "r", encoding='utf-8') as f:
-            content = f.read()
-        return content
+        # Check if the file is a PDF and extract text if so
+        if is_pdf(filename):
+            text = extract_text(filepath)
+            if not text:
+                return "Error: Could not extract text from PDF"
+            else:
+                return text
+        else:
+            formatted_filename = format_filename(filename)
+            filepath = safe_join(working_directory, formatted_filename)
+            with open(filepath, "r", encoding='utf-8') as f:
+                content = f.read()
+            return content
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -250,3 +260,8 @@ def get_directory_summary(directory):
                 content = f.read()
             summary.append({'file_path': file_path, 'content': content})
     return summary
+
+def is_pdf(file_path):
+    with open(file_path, 'rb') as file:
+        file_header = file.read(5)
+    return file_header == b'%PDF-'
