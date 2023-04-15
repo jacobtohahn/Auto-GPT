@@ -378,9 +378,7 @@ def main():
     full_message_history = []
     next_action_count = 0
     # Make a constant:
-    user_input = f"Determine which next command to use, and respond using"
-    f" JSON and only JSON. Your current files are:\n"
-    f"{str(file_operations.search_files('./'))}"
+    user_input = f"Determine which next command to use, and respond using JSON and only JSON"
     # Initialize memory and make sure it is empty.
     # this is particularly important for indexing and referencing pinecone memory
     memory = get_memory(cfg, init=True)
@@ -447,7 +445,7 @@ class Agent:
             with Spinner("Thinking... "):
                 assistant_reply = chat.chat_with_ai(
                     self.prompt,
-                    self.user_input,
+                    self.user_input + f". Your current files are: {str(file_operations.search_files('./'))}",
                     self.full_message_history,
                     self.memory,
                     cfg.fast_token_limit,
