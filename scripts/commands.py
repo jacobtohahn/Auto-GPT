@@ -6,8 +6,7 @@ import agent_manager as agents
 import speak
 from config import Config
 import ai_functions as ai
-from file_operations import read_file, write_to_file, append_to_file, delete_file, search_files, create_directory, list_directories, get_directory_summary, rename_file, copy_file, move_file, summarize_contents
-from execute_code import execute_python_file, execute_shell
+from file_operations import read_file, write_to_file, append_to_file, delete_file, search_files, list_resources, rename_file, copy_file, move_file, summarize_resources
 from json_parser import fix_and_parse_json
 from image_gen import generate_image
 from duckduckgo_search import ddg
@@ -83,8 +82,8 @@ def execute_command(command_name, arguments):
         # Browse/Summarize
         elif command_name == "browse_website":
             return browse_website(arguments["url"], arguments["question"])
-        # elif command_name == "generate_image":
-            # return generate_image(arguments["prompt"])
+        elif command_name == "generate_image":
+            return generate_image(arguments["prompt"])
         elif command_name == "get_text_summary":
             return get_text_summary(arguments["url"], arguments["question"])
         elif command_name == "get_hyperlinks":
@@ -111,10 +110,10 @@ def execute_command(command_name, arguments):
         # Directory Stuff
         # elif command_name == "create_directory":
             # return create_directory(arguments["directory"])
-        elif command_name == "list_directories":
-            return list_directories(arguments["directory"])
-        elif command_name == "evaluate_directory":
-            return summarize_contents()
+        elif command_name == "list_resources":
+            return list_resources()
+        elif command_name == "evaluate_resources":
+            return f"What follows is a summary of all files and folders in the working directory:\n\n{summarize_resources()}"
         
         # Silly AI Stuff
         elif command_name == "do_nothing":

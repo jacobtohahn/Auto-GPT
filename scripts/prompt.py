@@ -41,11 +41,11 @@ def get_prompt():
         ("Search Files", "search_files", {"directory": "<directory>"}),
         
         # ("Create Directory", "create_directory", {"directory": "<directory>"}),
-        ("Evaluate Directory", "evaluate_directory", {}),
-        ("List Directories", "list_directories", {"directory": "<directory>"}),
+        ("Evaluate Resources", "evaluate_resources", {}),
+        ("List Directories", "list_resources", {}),
         
         ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
-        # ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
+        ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
         ("Do Nothing", "do_nothing", {}),
     ]
 

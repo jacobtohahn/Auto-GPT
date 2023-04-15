@@ -1,7 +1,7 @@
 import os
 import os.path
 
-from smart_utils import cluster_documents, extract_keywords
+from smart_utils import summarize_contents
 
 # Set a dedicated folder for file I/O
 working_directory = "auto_gpt_workspace"
@@ -209,19 +209,31 @@ def create_directory(directory):
     except Exception as e:
         return "Error: " + str(e)
 
-def list_directories(directory):
-    dir_list = []
+def list_resources(directory=None):
+    if directory is None:
+        directory = working_directory
+        
+    resource_list = []
 
-    if directory == "" or directory == "/":
-        search_directory = working_directory
-    else:
-        search_directory = safe_join(working_directory, directory)
+    for entry in os.scandir(directory):
+        if not entry.name.startswith('.'):
+            if entry.is_dir():
+                resource_list.append(f"Folder: {entry.name}")
+                resource_list += list_resources(os.path.join(directory, entry.name))
+            elif entry.is_file():
+                resource_list.append(f"File: {entry.name}")
 
-    for entry in os.scandir(search_directory):
-        if entry.is_dir() and not entry.name.startswith('.'):
-            dir_list.append(entry.name)
+    return resource_list
 
-    return dir_list
+def resources_to_string(resource_list):
+    resources_string = "Resource file map:\n"
+    for resource in resource_list:
+        resources_string += f"{resource}\n"
+
+    return resources_string
+
+def summarize_resources():
+    return f"Summary of contents:\n{summarize_contents(working_directory)}\n\nResource file map:\n{(list_resources())}"
 
 def get_directory_summary(directory):
     summary = []
@@ -232,62 +244,3 @@ def get_directory_summary(directory):
                 content = f.read()
             summary.append({'file_path': file_path, 'content': content})
     return summary
-
-# todo: figure out how to use GPT-3 to evaluate a directory and suggest actions to improve it
-def evaluate_directory(gpt, directory):
-    directory_summary = get_directory_summary(directory)
-
-    prompt = f"Evaluate the following directory summary and suggest what actions should be taken to improve the organization and synthesis of the information:\n\n{directory_summary}"
-
-    response = gpt.generate(prompt)
-
-    # Process the GPT-generated suggestions and take appropriate actions based on these suggestions.
-    # This may involve reorganizing files, creating new folders, or synthesizing information from different files.
-    # You may need to implement this part based on the specific suggestions provided by GPT.
-
-    return response
-
-def summarize_contents():
-    total_files = 0
-    total_size = 0
-    file_extensions = {}
-    file_keywords = []
-    file_clusters = []
-
-    for root, dirs, files in os.walk(working_directory):
-        for file in files:
-            total_files += 1
-            file_path = os.path.join(root, file)
-            total_size += os.path.getsize(file_path)
-
-            # Extract file extension and count occurrences
-            file_extension = os.path.splitext(file)[-1].lower()
-            if file_extension in file_extensions:
-                file_extensions[file_extension] += 1
-            else:
-                file_extensions[file_extension] = 1
-
-            # Extract file keywords and clusters
-            keywords = extract_keywords(file_path)
-            clusters = cluster_documents([file_path])
-            file_keywords.append(keywords)
-            file_clusters.append(clusters)
-
-    summary = f"Directory Summary:\n"
-    summary += f"Total files: {total_files}\n"
-    summary += f"Total size: {total_size} bytes\n"
-    summary += f"File types:\n"
-
-    for ext, count in file_extensions.items():
-        summary += f"{ext}: {count}\n"
-
-    summary += f"Top Keywords:\n"
-    for i, keywords in enumerate(file_keywords):
-        summary += f"File {i+1}: {keywords}\n"
-
-    summary += f"File Clusters:\n"
-    for i, clusters in enumerate(file_clusters):
-        summary += f"File {i+1}: {clusters}\n"
-
-    return summary
-

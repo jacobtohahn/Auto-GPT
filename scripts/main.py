@@ -1,6 +1,7 @@
 import json
 import random
 import commands as cmd
+from file_operations import list_resources, summarize_resources
 import utils
 from memory import get_memory, get_supported_memory_backends
 import chat
