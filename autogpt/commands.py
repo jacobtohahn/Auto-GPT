@@ -5,7 +5,6 @@ from autogpt.config import Config
 from autogpt.json_parser import fix_and_parse_json
 from autogpt.image_gen import generate_image
 from duckduckgo_search import ddg
-from autogpt.ai_functions import evaluate_code, improve_code, write_tests
 from autogpt.browse import scrape_links, scrape_text, summarize_text
 from autogpt.execute_code import execute_python_file, execute_shell
 from autogpt.file_operations import (
@@ -14,6 +13,11 @@ from autogpt.file_operations import (
     read_file,
     search_files,
     write_to_file,
+    list_resources,
+    rename_file,
+    copy_file,
+    move_file,
+    summarize_resources
 )
 from autogpt.memory import get_memory
 from autogpt.speak import say_text
@@ -78,6 +82,8 @@ def execute_command(command_name, arguments):
                 return google_search(arguments["input"])
         elif command_name == "memory_add":
             return memory.add(arguments["string"])
+        
+        # Agents
         elif command_name == "start_agent":
             return start_agent(
                 arguments["name"], arguments["task"], arguments["prompt"]
@@ -88,10 +94,18 @@ def execute_command(command_name, arguments):
             return list_agents()
         elif command_name == "delete_agent":
             return delete_agent(arguments["key"])
+        
+        # Browse/Summarize
+        elif command_name == "browse_website":
+            return browse_website(arguments["url"], arguments["question"])
+        elif command_name == "generate_image":
+            return generate_image(arguments["prompt"])
         elif command_name == "get_text_summary":
             return get_text_summary(arguments["url"], arguments["question"])
         elif command_name == "get_hyperlinks":
             return get_hyperlinks(arguments["url"])
+        
+        # File Stuff
         elif command_name == "read_file":
             return read_file(arguments["file"])
         elif command_name == "write_to_file":
@@ -100,34 +114,26 @@ def execute_command(command_name, arguments):
             return append_to_file(arguments["file"], arguments["text"])
         elif command_name == "delete_file":
             return delete_file(arguments["file"])
+        elif command_name == "copy_file":
+            return copy_file(arguments["source"], arguments["destination"])
+        elif command_name == "move_file":
+            return move_file(arguments["source"], arguments["destination"])
+        elif command_name == "rename_file":
+            return rename_file(arguments["source"], arguments["destination"])
         elif command_name == "search_files":
             return search_files(arguments["directory"])
-        elif command_name == "browse_website":
-            return browse_website(arguments["url"], arguments["question"])
-        # TODO: Change these to take in a file rather than pasted code, if
-        # non-file is given, return instructions "Input should be a python
-        # filepath, write your code to file and try again"
-#       elif command_name == "evaluate_code":
-#           return evaluate_code(arguments["code"])
-#       elif command_name == "improve_code":
-#           return improve_code(arguments["suggestions"], arguments["code"])
-#       elif command_name == "write_tests":
-#           return write_tests(arguments["code"], arguments.get("focus"))
-#       elif command_name == "execute_python_file":  # Add this command
-#           return execute_python_file(arguments["file"])
-        elif command_name == "execute_shell":
-            if cfg.execute_local_commands:
-                return execute_shell(arguments["command_line"])
-            else:
-                return (
-                    "You are not allowed to run local shell commands. To execute"
-                    " shell commands, EXECUTE_LOCAL_COMMANDS must be set to 'True' "
-                    "in your config. Do not attempt to bypass the restriction."
-                )
-#       elif command_name == "generate_image":
-#           return generate_image(arguments["prompt"])
-#       elif command_name == "do_nothing":
-#           return "No action performed."
+        
+        # Directory Stuff
+        # elif command_name == "create_directory":
+            # return create_directory(arguments["directory"])
+        elif command_name == "list_resources":
+            return list_resources()
+        elif command_name == "evaluate_resources":
+            return f"What follows is a summary of all files and folders in the working directory:\n\n{summarize_resources()}"
+        
+        # Silly AI Stuff
+        elif command_name == "do_nothing":
+            return "No action performed."
         elif command_name == "task_complete":
             shutdown()
         else:

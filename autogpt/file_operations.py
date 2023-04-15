@@ -1,6 +1,8 @@
 import os
 import os.path
 
+from smart_utils import summarize_contents
+
 # Set a dedicated folder for file I/O
 working_directory = "auto_gpt_workspace"
 
@@ -19,6 +21,22 @@ def safe_join(base, *paths):
 
     return norm_new_path
 
+# Ensure lower_snake_case filenames
+def format_filename(filename):
+    """Format a filename to be lowercase with underscores"""
+    # Split the file path into directory and file name components
+    directory, file_name = os.path.split(filename)
+    
+    # Replace any spaces in the file name with underscores
+    file_name = file_name.replace(' ', '_')
+    
+    # Convert the file name to lowercase
+    file_name = file_name.lower()
+    
+    # Rejoin the directory and file name components to create the full path
+    formatted_filename = os.path.join(directory, file_name)
+    
+    return formatted_filename
 
 def split_file(content, max_length=4000, overlap=0):
     """
@@ -48,8 +66,9 @@ def split_file(content, max_length=4000, overlap=0):
 def read_file(filename) -> str:
     """Read a file and return the contents"""
     try:
-        filepath = safe_join(working_directory, filename)
-        with open(filepath, "r", encoding="utf-8") as f:
+        formatted_filename = format_filename(filename)
+        filepath = safe_join(working_directory, formatted_filename)
+        with open(filepath, "r", encoding='utf-8') as f:
             content = f.read()
         return content
     except Exception as e:
@@ -91,7 +110,8 @@ def ingest_file(filename, memory, max_length=4000, overlap=200):
 def write_to_file(filename, text):
     """Write text to a file"""
     try:
-        filepath = safe_join(working_directory, filename)
+        formatted_filename = format_filename(filename)
+        filepath = safe_join(working_directory, formatted_filename)
         directory = os.path.dirname(filepath)
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -105,7 +125,8 @@ def write_to_file(filename, text):
 def append_to_file(filename, text):
     """Append text to a file"""
     try:
-        filepath = safe_join(working_directory, filename)
+        formatted_filename = format_filename(filename)
+        filepath = safe_join(working_directory, formatted_filename)
         with open(filepath, "a") as f:
             f.write(text)
         return "Text appended to " + filename + " successfully."
@@ -116,12 +137,55 @@ def append_to_file(filename, text):
 def delete_file(filename):
     """Delete a file"""
     try:
-        filepath = safe_join(working_directory, filename)
+        formatted_filename = format_filename(filename)
+        filepath = safe_join(working_directory, formatted_filename)
         os.remove(filepath)
         return "File "  + filename + " deleted successfully."
     except Exception as e:
         return "Error: " + str(e)
+    
 
+def copy_file(src_filename, dest_directory):
+    try:
+        formatted_src_filename = format_filename(src_filename)
+        src_filepath = safe_join(working_directory, formatted_src_filename)
+        dest_directory_path = safe_join(working_directory, dest_directory)
+        dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
+
+        if not os.path.exists(dest_directory_path):
+            os.makedirs(dest_directory_path)
+
+        shutil.copy2(src_filepath, dest_filepath)
+        return "File copied successfully."
+    except Exception as e:
+        return "Error: " + str(e)
+    
+def move_file(src_filename, dest_directory):
+    try:
+        formatted_src_filename = format_filename(src_filename)
+        src_filepath = safe_join(working_directory, formatted_src_filename)
+        dest_directory_path = safe_join(working_directory, dest_directory)
+        dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
+
+        if not os.path.exists(dest_directory_path):
+            os.makedirs(dest_directory_path)
+
+        os.rename(src_filepath, dest_filepath)
+        return "File moved successfully."
+    except Exception as e:
+        return "Error: " + str(e)
+
+def rename_file(old_filename, new_filename):
+    try:
+        old_formatted_filename = format_filename(old_filename)
+        new_formatted_filename = format_filename(new_filename)
+        old_filepath = safe_join(working_directory, old_formatted_filename)
+        new_filepath = safe_join(working_directory, new_formatted_filename)
+
+        os.rename(old_filepath, new_filepath)
+        return "File renamed successfully."
+    except Exception as e:
+        return "Error: " + str(e)
 
 def search_files(directory):
     found_files = []
@@ -142,3 +206,47 @@ def search_files(directory):
             found_files.append(relative_path)
 
     return found_files
+
+def create_directory(directory):
+    try:
+        dir_path = safe_join(working_directory, directory)
+        os.makedirs(dir_path, exist_ok=True)
+        return f"Directory '{directory}' created successfully."
+    except Exception as e:
+        return "Error: " + str(e)
+
+def list_resources(directory=None):
+    if directory is None:
+        directory = working_directory
+        
+    resource_list = []
+
+    for entry in os.scandir(directory):
+        if not entry.name.startswith('.'):
+            if entry.is_dir():
+                resource_list.append(f"Folder: {entry.name}")
+                resource_list += list_resources(os.path.join(directory, entry.name))
+            elif entry.is_file():
+                resource_list.append(f"File: {entry.name}")
+
+    return resource_list
+
+def resources_to_string(resource_list):
+    resources_string = "Resource file map:\n"
+    for resource in resource_list:
+        resources_string += f"{resource}\n"
+
+    return resources_string
+
+def summarize_resources():
+    return f"Summary of contents:\n{summarize_contents(working_directory)}\n\nResource file map:\n{(list_resources())}"
+
+def get_directory_summary(directory):
+    summary = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            with open(file_path, 'r') as f:
+                content = f.read()
+            summary.append({'file_path': file_path, 'content': content})
+    return summary

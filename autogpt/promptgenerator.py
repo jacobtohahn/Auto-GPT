@@ -23,6 +23,7 @@ class PromptGenerator:
                 "plan": "- short bulleted\n- list that conveys\n- long-term plan",
                 "criticism": "constructive self-criticism",
                 "speak": "thoughts summary to say to user",
+                "essence": "key words, concepts, or ideas derived from thoughts"
             },
             "command": {"name": "command name", "args": {"arg name": "value"}},
         }
