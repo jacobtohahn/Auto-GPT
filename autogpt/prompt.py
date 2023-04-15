@@ -29,6 +29,9 @@ def get_prompt() -> str:
     prompt_generator.add_constraint(
         "All content should be written in .md files using Markdown formatting unless a .csv file is warranted."
     )
+    prompt_generator.add_constraint(
+        "Directories should not have file extensions."
+    )
 
     # Define the command list
     commands = [
@@ -63,7 +66,7 @@ def get_prompt() -> str:
         ("Rename File", "rename_file", {"source": "<source>", "destination": "<destination>"}),
         ("Search Files", "search_files", {"directory": "<directory>"}),
 
-        # ("Create Directory", "create_directory", {"directory": "<directory>"}),
+        ("Create Directory", "create_directory", {"directory": "<directory>"}),
         ("Evaluate Resources", "evaluate_resources", {}),
         ("List Directories", "list_resources", {}),
 

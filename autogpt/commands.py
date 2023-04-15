@@ -17,6 +17,7 @@ from autogpt.file_operations import (
     rename_file,
     copy_file,
     move_file,
+    create_directory,
     summarize_resources
 )
 from autogpt.memory import get_memory
@@ -124,8 +125,8 @@ def execute_command(command_name, arguments):
             return search_files(arguments["directory"])
         
         # Directory Stuff
-        # elif command_name == "create_directory":
-            # return create_directory(arguments["directory"])
+        elif command_name == "create_directory":
+            return create_directory(arguments["directory"])
         elif command_name == "list_resources":
             return list_resources()
         elif command_name == "evaluate_resources":
