@@ -1,7 +1,7 @@
 import os
 import os.path
 
-from smart_utils import summarize_contents
+from autogpt.smart_utils import summarize_contents
 
 # Set a dedicated folder for file I/O
 working_directory = "auto_gpt_workspace"
