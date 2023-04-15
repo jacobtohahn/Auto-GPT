@@ -3,6 +3,7 @@ from autogpt.config.ai_config import AIConfig
 from autogpt.config.config import Config
 from autogpt.logs import logger
 from autogpt.promptgenerator import PromptGenerator
+from autogpt.config import Config
 from autogpt.setup import prompt_user
 from autogpt.utils import clean_input
 
@@ -17,6 +18,9 @@ def get_prompt() -> str:
     Returns:
         str: The generated prompt string.
     """
+
+    # Initialize the Config object
+    cfg = Config()
 
     # Initialize the PromptGenerator object
     prompt_generator = PromptGenerator()
@@ -68,6 +72,12 @@ def get_prompt() -> str:
         ("Delete GPT Agent", "delete_agent", {"key": "<key>"}),
 
         # File stuff
+        (
+            "Clone Repository",
+            "clone_repository",
+            {"repository_url": "<url>", "clone_path": "<directory>"},
+        ),
+        ("Write to file", "write_to_file", {"file": "<file>", "text": "<text>"}),
         ("Read file", "read_file", {"file": "<file>"}),
         ("Write to file", "write_to_file", {"file": "<file>", "text": "<text>"}),
         ("Append to file", "append_to_file", {"file": "<file>", "text": "<text>"}),
@@ -84,7 +94,38 @@ def get_prompt() -> str:
         ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
         ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
     #    ("Do Nothing", "do_nothing", {}),
+        ("Evaluate Code", "evaluate_code", {"code": "<full_code_string>"}),
+        (
+            "Get Improved Code",
+            "improve_code",
+            {"suggestions": "<list_of_suggestions>", "code": "<full_code_string>"},
+        ),
+        (
+            "Write Tests",
+            "write_tests",
+            {"code": "<full_code_string>", "focus": "<list_of_focus_areas>"},
+        ),
+        ("Execute Python File", "execute_python_file", {"file": "<file>"}),
+        ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
     ]
+
+    # Only add shell command to the prompt if the AI is allowed to execute it
+    if cfg.execute_local_commands:
+        commands.append(
+            (
+                "Execute Shell Command, non-interactive commands only",
+                "execute_shell",
+                {"command_line": "<command_line>"},
+            ),
+        )
+
+    # Add these command last.
+    commands.append(
+        ("Do Nothing", "do_nothing", {}),
+    )
+    commands.append(
+        ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
+    )
 
     # Add commands to the PromptGenerator object
     for command_label, command_name, args in commands:
