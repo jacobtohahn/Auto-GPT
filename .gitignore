@@ -5,7 +5,7 @@ autogpt/node_modules/
 autogpt/__pycache__/keys.cpython-310.pyc
 package-lock.json
 *.pyc
-auto_gpt_workspace/*
+autogpt/auto_gpt_workspace/*
 *.mpeg
 .env
 azure.yaml
@@ -19,7 +19,6 @@ auto-gpt.json
 log.txt
 log-ingestion.txt
 logs
-.DS_STORE
 *.log
 *.mp3
 
