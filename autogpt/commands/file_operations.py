@@ -3,6 +3,7 @@ import os
 import os.path
 from pathlib import Path
 from typing import Generator, List
+import shutil
 
 from autogpt.smart_utils import summarize_contents
 
