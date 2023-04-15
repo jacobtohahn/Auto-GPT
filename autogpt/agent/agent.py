@@ -79,6 +79,9 @@ class Agent:
                 command_name, arguments = get_command(
                     attempt_to_fix_json_by_finding_outermost_brackets(assistant_reply)
                 )
+                if command_name == "Error:":
+                    command_name == "human_feedback"
+                    arguments == "Try again, but respond using JSON and only JSON"
                 if cfg.speak_mode:
                     say_text(f"I want to execute {command_name}")
             except Exception as e:
