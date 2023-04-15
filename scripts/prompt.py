@@ -40,7 +40,7 @@ def get_prompt():
         ("Rename File", "rename_file", {"source": "<source>", "destination": "<destination>"}),
         ("Search Files", "search_files", {"directory": "<directory>"}),
         
-        # ("Create Directory", "create_directory", {"directory": "<directory>"}),
+        ("Create Directory", "create_directory", {"directory": "<directory>"}),
         ("Evaluate Resources", "evaluate_resources", {}),
         ("List Directories", "list_resources", {}),
         

@@ -6,7 +6,7 @@ import agent_manager as agents
 import speak
 from config import Config
 import ai_functions as ai
-from file_operations import read_file, write_to_file, append_to_file, delete_file, search_files, list_resources, rename_file, copy_file, move_file, summarize_resources
+from file_operations import read_file, write_to_file, append_to_file, delete_file, search_files, list_resources, rename_file, copy_file, move_file, summarize_resources, create_directory
 from json_parser import fix_and_parse_json
 from image_gen import generate_image
 from duckduckgo_search import ddg
@@ -108,8 +108,8 @@ def execute_command(command_name, arguments):
             return search_files(arguments["directory"])
         
         # Directory Stuff
-        # elif command_name == "create_directory":
-            # return create_directory(arguments["directory"])
+        elif command_name == "create_directory":
+            return create_directory(arguments["directory"])
         elif command_name == "list_resources":
             return list_resources()
         elif command_name == "evaluate_resources":

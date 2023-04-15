@@ -1,5 +1,6 @@
 import os
 import os.path
+import shutil
 
 from smart_utils import summarize_contents
 

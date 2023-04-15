@@ -450,6 +450,12 @@ class Agent:
 
             self.memory.add(memory_to_add)
 
+            # resource_list = list_resources()
+            # resource_summary = summarize_resources()
+
+            # result += f"\n\nResource file map: {resource_list}"
+            # result += f"\n\nResource summary: {resource_summary}"
+
             # Check if there's a result from the command append it to the message
             # history
             if result is not None:
