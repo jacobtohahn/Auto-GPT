@@ -1,29 +1,30 @@
 """ Command and Control """
 import json
 from typing import List, NoReturn, Union
+
 from autogpt.agent.agent_manager import AgentManager
 from autogpt.commands.evaluate_code import evaluate_code
-from autogpt.commands.google_search import google_official_search, google_search
-from autogpt.commands.improve_code import improve_code
-from autogpt.commands.write_tests import write_tests
-from autogpt.config import Config
-from autogpt.commands.image_gen import generate_image
-from autogpt.commands.web_requests import scrape_links, scrape_text
 from autogpt.commands.execute_code import execute_python_file, execute_shell
 from autogpt.commands.file_operations import (
     append_to_file,
     delete_file,
+    get_filesystem_representation,
     read_file,
     search_files,
     write_to_file,
 )
+from autogpt.commands.git_operations import clone_repository
+from autogpt.commands.google_search import google_official_search, google_search
+from autogpt.commands.image_gen import generate_image
+from autogpt.commands.improve_code import improve_code
+from autogpt.commands.web_requests import scrape_links, scrape_text
+from autogpt.commands.web_selenium import browse_website
+from autogpt.commands.write_tests import write_tests
+from autogpt.config import Config
 from autogpt.json_fixes.parsing import fix_and_parse_json
 from autogpt.memory import get_memory
 from autogpt.processing.text import summarize_text
 from autogpt.speech import say_text
-from autogpt.commands.web_selenium import browse_website
-from autogpt.commands.git_operations import clone_repository
-
 
 CFG = Config()
 AGENT_MANAGER = AgentManager()
@@ -157,6 +158,8 @@ def execute_command(command_name: str, arguments):
             return delete_file(arguments["file"])
         elif command_name == "search_files":
             return search_files(arguments["directory"])
+        elif command_name == "get_filesystem_representation":
+            return get_filesystem_representation()
         elif command_name == "browse_website":
             return browse_website(arguments["url"], arguments["question"])
         # TODO: Change these to take in a file rather than pasted code, if
