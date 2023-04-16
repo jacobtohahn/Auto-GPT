@@ -143,6 +143,23 @@ def ingest_file(
         print(f"Error while ingesting file '{filename}': {str(e)}")
 
 
+def find_file(filename: str, path: str = WORKING_DIRECTORY) -> str:
+    """Recursively search for a file with the given filename in the filesystem.
+
+    Args:
+        filename (str): The name of the file to search for.
+        path (str, optional): The path to start the search from. Defaults to WORKING_DIRECTORY.
+
+    Returns:
+        str: The path to the found file or an empty string if the file is not found.
+    """
+    for root, dirs, files in os.walk(path):
+        if filename in files:
+            return os.path.join(root, filename)
+
+    return ""
+
+
 def write_to_file(filename: str, text: str) -> str:
     """Write text to a file
 
@@ -155,10 +172,16 @@ def write_to_file(filename: str, text: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
-        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
-        directory = os.path.dirname(filepath)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        existing_filepath = find_file(formatted_filename)
+
+        if existing_filepath:
+            return f"A file with that name already exists in a different location: {safe_join(WORKING_DIRECTORY, formatted_filename)}. Use append_to_file instead."
+        else:
+            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
+            directory = os.path.dirname(filepath)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(text)
         return "File " + filename + " written to successfully."
@@ -178,7 +201,16 @@ def append_to_file(filename: str, text: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
-        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
+        existing_filepath = find_file(formatted_filename)
+
+        if existing_filepath:
+            return f"A file with that name already exists in a different location: {safe_join(WORKING_DIRECTORY, formatted_filename)}"
+        else:
+            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
+            directory = os.path.dirname(filepath)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
         with open(filepath, "a") as f:
             f.write(text)
         return "Text appended to " + filename + " successfully."
