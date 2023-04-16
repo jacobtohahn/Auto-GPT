@@ -143,6 +143,7 @@ def execute_command(command_name: str, arguments):
             key = CFG.google_api_key
             if key and key.strip() and key != "your-google-api-key":
                 google_result = google_official_search(arguments["input"])
+                return google_result
             else:
                 google_result = google_search(arguments["input"])
             safe_message = [result.encode('utf-8', 'ignore') for result in google_result]
@@ -218,7 +219,7 @@ def execute_command(command_name: str, arguments):
         elif command_name == "read_audio_from_file":
             return read_audio_from_file(arguments["file"])
         elif command_name == "send_tweet":
-            return send_tweet(arguments['text'])
+            return send_tweet(arguments["text"])
         elif command_name == "do_nothing":
             return "No action performed."
         elif command_name == "task_complete":

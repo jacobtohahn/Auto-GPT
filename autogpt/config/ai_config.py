@@ -101,7 +101,7 @@ class AIConfig:
 
         prompt_start = (
             "Your decisions must always be made independently without"
-            "seeking user assistance. Use your strengths as an LLM and pursue"
+            " seeking user assistance. Use your strengths as an LLM and pursue"
             " strategies with no legal complications."
             ""
         )
