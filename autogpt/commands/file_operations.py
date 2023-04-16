@@ -221,7 +221,7 @@ def write_to_file(filename: str, text: str) -> str:
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(text)
         log_operation("write", filename)
-        return "File " + filename + " written to successfully."
+        return f"File {filename} written to successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return handle_file_error("write", filename, str(e))
 
@@ -251,7 +251,7 @@ def append_to_file(filename: str, text: str) -> str:
         with open(filepath, "a") as f:
             f.write(text)
         log_operation("append", filename)
-        return "Text appended to " + filename + " successfully."
+        return f"Text appended to {filename} successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return handle_file_error("append", filename, str(e))
 
@@ -272,7 +272,7 @@ def delete_file(filename: str) -> str:
         filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
         os.remove(filepath)
         log_operation("delete", filename)
-        return "File "  + filename + " deleted successfully."
+        return f"File {filename} deleted successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return handle_file_error("delete", filename, str(e))
     
@@ -288,7 +288,7 @@ def copy_file(src_filename, dest_directory):
             os.makedirs(dest_directory_path)
 
         shutil.copy2(src_filepath, dest_filepath)
-        return "File copied successfully."
+        return f"File copied successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
     
@@ -303,7 +303,7 @@ def move_file(src_filename, dest_directory):
             os.makedirs(dest_directory_path)
 
         os.rename(src_filepath, dest_filepath)
-        return "File moved successfully."
+        return f"File moved successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
 
@@ -315,7 +315,7 @@ def rename_file(old_filename, new_filename):
         new_filepath = safe_join(WORKING_DIRECTORY, new_formatted_filename)
 
         os.rename(old_filepath, new_filepath)
-        return "File renamed successfully."
+        return f"File renamed successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
 
@@ -351,7 +351,7 @@ def create_directory(directory):
     try:
         dir_path = safe_join(WORKING_DIRECTORY, directory)
         os.makedirs(dir_path, exist_ok=True)
-        return f"Directory '{directory}' created successfully."
+        return f"Directory '{directory}' created successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
 
