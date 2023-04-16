@@ -1,10 +1,12 @@
 """File operations for AutoGPT"""
+from __future__ import annotations
+
 import os
 import os.path
 from pathlib import Path
-from typing import Generator, List
+from autogpt.workspace import path_in_workspace, WORKSPACE_PATH
+from typing import Generator, List, Union
 import shutil
-from typing import Union
 import glob
 
 from autogpt.smart_utils import summarize_contents
@@ -19,8 +21,7 @@ if not os.path.exists(WORKING_DIRECTORY):
     os.makedirs(WORKING_DIRECTORY)
 
 LOG_FILE = "file_logger.txt"
-LOG_FILE_PATH = WORKING_DIRECTORY / LOG_FILE
-WORKING_DIRECTORY = str(WORKING_DIRECTORY)
+LOG_FILE_PATH = WORKSPACE_PATH / LOG_FILE
 
 
 def check_duplicate_operation(operation: str, filename: str) -> bool:
@@ -56,7 +57,7 @@ def log_operation(operation: str, filename: str, filename2: str = None) -> None:
         with open(LOG_FILE_PATH, "w", encoding="utf-8") as f:
             f.write("File Operation Logger ")
 
-    append_to_file(LOG_FILE, log_entry)
+    append_to_file(LOG_FILE, log_entry, shouldLog = False)
 
 
 def safe_join(base: str, *paths) -> str:
@@ -132,7 +133,7 @@ def read_file(filename: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
-        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
+        filepath = path_in_workspace(formatted_filename)
         # Check if the file is a PDF and extract text if so
         if is_pdf(filepath):
             text = extract_text(filepath)
@@ -141,7 +142,6 @@ def read_file(filename: str) -> str:
             else:
                 return text
         else:
-            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
             with open(filepath, "r", encoding='utf-8') as f:
                 content = f.read()
             return content
@@ -218,9 +218,9 @@ def write_to_file(filename: str, text: str) -> str:
         existing_filepath = find_file(formatted_filename)
 
         if existing_filepath:
-            return f"A file with that name already exists in a different location: {safe_join(WORKING_DIRECTORY, formatted_filename)}. Use append_to_file instead."
+            return f"A file with that name already exists in a different location: {path_in_workspace(formatted_filename)}. Use append_to_file instead."
         else:
-            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
+            filepath = path_in_workspace(formatted_filename)
             directory = os.path.dirname(filepath)
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -233,7 +233,7 @@ def write_to_file(filename: str, text: str) -> str:
         return handle_file_error("write", filename, str(e))
 
 
-def append_to_file(filename: str, text: str) -> str:
+def append_to_file(filename: str, text: str, shouldLog: bool = True) -> str:
     """Append text to a file
 
     Args:
@@ -245,19 +245,22 @@ def append_to_file(filename: str, text: str) -> str:
     """
     try:
         formatted_filename = format_filename(filename)
+        filepath = path_in_workspace(formatted_filename)
         existing_filepath = find_file(formatted_filename)
 
         if existing_filepath:
-            return f"A file with that name already exists in a different location: {safe_join(WORKING_DIRECTORY, formatted_filename)}"
+            return f"A file with that name already exists in a different location: {path_in_workspace(formatted_filename)}"
         else:
-            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
             directory = os.path.dirname(filepath)
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
         with open(filepath, "a") as f:
             f.write(text)
-        log_operation("append", filepath)
+
+        if shouldLog:
+            log_operation("append", filepath)
+
         return f"Text appended to {filename} successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return handle_file_error("append", filename, str(e))
@@ -299,11 +302,11 @@ def copy_file(src_filename: Union[str, List], dest_directory: str):
         files_copied = []
         for file in src_filename:
             formatted_src_filename = format_filename(file)
-            src_filepath_pattern = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            src_filepath_pattern = path_in_workspace(formatted_src_filename)
             matching_files = glob.glob(src_filepath_pattern)
             if len(matching_files) == 0:
                 return f"Error: File {file} not found."
-            dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
+            dest_directory_path = path_in_workspace(dest_directory)
             if not os.path.exists(dest_directory_path):
                 os.makedirs(dest_directory_path)
             for src_filepath in matching_files:
@@ -322,11 +325,11 @@ def move_file(src_filename: Union[str, List], dest_directory: str):
         files_moved = []
         for file in src_filename:
             formatted_src_filename = format_filename(file)
-            src_filepath_pattern = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            src_filepath_pattern = path_in_workspace(formatted_src_filename)
             matching_files = glob.glob(src_filepath_pattern)
             if len(matching_files) == 0:
                 return f"Error: File {file} not found."
-            dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
+            dest_directory_path = path_in_workspace(dest_directory)
             if not os.path.exists(dest_directory_path):
                 os.makedirs(dest_directory_path)
             for src_filepath in matching_files:
@@ -342,41 +345,41 @@ def rename_file(old_filename, new_filename):
     try:
         old_formatted_filename = format_filename(old_filename)
         new_formatted_filename = format_filename(new_filename)
-        old_filepath_pattern = safe_join(WORKING_DIRECTORY, old_formatted_filename)
+        old_filepath_pattern = path_in_workspace(old_formatted_filename)
         matching_files = glob.glob(old_filepath_pattern)
         if len(matching_files) == 0:
             return f"Error: File {old_filename} not found."
-        new_filepath = safe_join(WORKING_DIRECTORY, new_formatted_filename)
+        new_filepath = path_in_workspace(new_formatted_filename)
         os.rename(matching_files[0], new_filepath)
         log_operation("rename", matching_files[0], new_filepath)
         return f"File {old_filename} renamed to {new_filename} successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
 
-def search_files(directory: str) -> List[str]:
+def search_files(directory: str) -> list[str]:
     """Search for files in a directory
 
     Args:
         directory (str): The directory to search in
 
     Returns:
-        List[str]: A list of files found in the directory
+        list[str]: A list of files found in the directory
     """
     found_files = []
 
     if directory in {"", "/"}:
-        search_directory = WORKING_DIRECTORY
+        search_directory = WORKSPACE_PATH
     else:
-        search_directory = safe_join(WORKING_DIRECTORY, directory)
+        search_directory = path_in_workspace(directory)
 
     if not os.path.isdir(search_directory):
         return "Error: directory does not exist"
 
-    for root, dirs, files in os.walk(search_directory):
+    for root, _, files in os.walk(search_directory):
         for file in files:
             if file.startswith("."):
                 continue
-            relative_path = os.path.relpath(os.path.join(root, file), WORKING_DIRECTORY)
+            relative_path = os.path.relpath(os.path.join(root, file), WORKSPACE_PATH)
             found_files.append(relative_path)
 
     return found_files
