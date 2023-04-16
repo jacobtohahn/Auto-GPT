@@ -209,5 +209,19 @@ command_help = {
         "ARGUMENTS:\n"
         "Command (str): The command to get help with\n"
         "EXAMPLE: {'name': 'help', 'args': {'command': 'read_file'}}"
+    ),
+    "read_audio_from_file": (
+        "COMMAND: Convert Audio to Text \n"
+        "DESCRIPTION: Transcribe voice to text from an audio file\n"
+        "ARGUMENTS:\n"
+        "File (str): The path to the audio file to transcribe\n"
+        "EXAMPLE: {'name': 'read_audio_from_file', 'args': {'file': 'speech.mp4'}}"
+    ),
+    "send_tweet": (
+        "COMMAND: Send Tweet\n"
+        "DESCRIPTION: Send a Tweet\n"
+        "ARGUMENTS:\n"
+        "Tweet (str): The command to get help with\n"
+        "EXAMPLE: {'name': 'send_tweet', 'args': {'text': 'Hello humans!'}}"
     )
 }
