@@ -36,14 +36,18 @@ def check_duplicate_operation(operation: str, filename: str) -> bool:
     return log_entry in log_content
 
 
-def log_operation(operation: str, filename: str) -> None:
+def log_operation(operation: str, filename: str, filename2: str = None) -> None:
     """Log the file operation to the file_logger.txt
 
     Args:
         operation (str): The operation to log
         filename (str): The name of the file the operation was performed on
     """
-    log_entry = f"{operation}: {filename}\n"
+
+    if not filename2 == None:
+        log_entry = f"{operation}: {filename} to {filename2}\n"
+    else:
+        log_entry = f"{operation}: {filename}\n"
 
     # Create the log file if it doesn't exist
     if not os.path.exists(LOG_FILE_PATH):
@@ -220,7 +224,7 @@ def write_to_file(filename: str, text: str) -> str:
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(text)
-        log_operation("write", filename)
+        log_operation("write", filepath)
         return f"File {filename} written to successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return handle_file_error("write", filename, str(e))
@@ -250,7 +254,7 @@ def append_to_file(filename: str, text: str) -> str:
 
         with open(filepath, "a") as f:
             f.write(text)
-        log_operation("append", filename)
+        log_operation("append", filepath)
         return f"Text appended to {filename} successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return handle_file_error("append", filename, str(e))
@@ -271,7 +275,7 @@ def delete_file(filename: str) -> str:
         formatted_filename = format_filename(filename)
         filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
         os.remove(filepath)
-        log_operation("delete", filename)
+        log_operation("delete", filepath)
         return f"File {filename} deleted successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return handle_file_error("delete", filename, str(e))
@@ -288,7 +292,8 @@ def copy_file(src_filename, dest_directory):
             os.makedirs(dest_directory_path)
 
         shutil.copy2(src_filepath, dest_filepath)
-        return f"File copied successfully. Your current files are now: {list_resources()}"
+        log_operation("copy", src_filepath, dest_filepath)
+        return f"File {src_filename} copied successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
     
@@ -303,7 +308,8 @@ def move_file(src_filename, dest_directory):
             os.makedirs(dest_directory_path)
 
         os.rename(src_filepath, dest_filepath)
-        return f"File moved successfully. Your current files are now: {list_resources()}"
+        log_operation("move", src_filepath, dest_filepath)
+        return f"File {src_filename} moved successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
 
@@ -315,7 +321,8 @@ def rename_file(old_filename, new_filename):
         new_filepath = safe_join(WORKING_DIRECTORY, new_formatted_filename)
 
         os.rename(old_filepath, new_filepath)
-        return f"File renamed successfully. Your current files are now: {list_resources()}"
+        log_operation("rename", old_filepath, new_filepath)
+        return f"File {old_filename} renamed successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
 
@@ -351,6 +358,7 @@ def create_directory(directory):
     try:
         dir_path = safe_join(WORKING_DIRECTORY, directory)
         os.makedirs(dir_path, exist_ok=True)
+        log_operation("mkdir", dir_path)
         return f"Directory '{directory}' created successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
