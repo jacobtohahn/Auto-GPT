@@ -201,7 +201,7 @@ def delete_file(filename: str) -> str:
         os.remove(filepath)
         return "File "  + filename + " deleted successfully."
     except Exception as e:
-        return "Error: " + str(e)
+        return handle_file_error("delete", filename, str(e))
     
 
 def copy_file(src_filename, dest_directory):
@@ -232,7 +232,7 @@ def move_file(src_filename, dest_directory):
         os.rename(src_filepath, dest_filepath)
         return "File moved successfully."
     except Exception as e:
-        return handle_file_error("delete", filename, str(e))
+        return "Error: " + str(e)
 
 def rename_file(old_filename, new_filename):
     try:
