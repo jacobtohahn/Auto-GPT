@@ -4,6 +4,13 @@ from typing import List, NoReturn, Union
 
 from autogpt.agent.agent_manager import AgentManager
 from autogpt.commands.evaluate_code import evaluate_code
+from autogpt.commands.google_search import google_official_search, google_search
+from autogpt.commands.improve_code import improve_code
+from autogpt.commands.write_tests import write_tests
+from autogpt.config import Config
+from autogpt.commands.image_gen import generate_image
+from autogpt.commands.audio_text import read_audio_from_file
+from autogpt.commands.web_requests import scrape_links, scrape_text
 from autogpt.commands.execute_code import execute_python_file, execute_shell
 from autogpt.commands.file_operations import (
     append_to_file,
@@ -33,6 +40,10 @@ from autogpt.processing.text import summarize_text
 from autogpt.speech import say_text
 from autogpt.help_messages import command_help
 from autogpt.prompt import get_prompt
+from autogpt.commands.web_selenium import browse_website
+from autogpt.commands.git_operations import clone_repository
+from autogpt.commands.twitter import send_tweet
+
 
 CFG = Config()
 AGENT_MANAGER = AgentManager()
@@ -138,8 +149,6 @@ def execute_command(command_name: str, arguments):
             return str(safe_message)
         elif command_name == "memory_add":
             return memory.add(arguments["string"])
-        
-        # Agents
         elif command_name == "start_agent":
             return start_agent(
                 arguments["name"], arguments["task"], arguments["prompt"]
@@ -150,8 +159,6 @@ def execute_command(command_name: str, arguments):
             return list_agents()
         elif command_name == "delete_agent":
             return delete_agent(arguments["key"])
-        
-        # Browse/Summarize
         elif command_name == "browse_website":
             return browse_website(arguments["url"], arguments["question"])
         elif command_name == "generate_image":
@@ -160,8 +167,6 @@ def execute_command(command_name: str, arguments):
             return get_text_summary(arguments["url"], arguments["question"])
         elif command_name == "get_hyperlinks":
             return get_hyperlinks(arguments["url"])
-        
-        # File Stuff
         elif command_name == "clone_repository":
             return clone_repository(
                 arguments["repository_url"], arguments["clone_path"]
@@ -182,8 +187,6 @@ def execute_command(command_name: str, arguments):
             return rename_file(arguments["source"], arguments["destination"])
         elif command_name == "search_files":
             return search_files(arguments["directory"])
-        
-        # Directory Stuff
         elif command_name == "create_directory":
             return create_directory(arguments["directory"])
         elif command_name == "list_resources":
@@ -192,11 +195,6 @@ def execute_command(command_name: str, arguments):
             return f"What follows is a summary of all files and folders in the working directory:\n\n{summarize_resources()}"
         elif command_name == "get_filesystem_representation":
             return get_filesystem_representation()
-        
-        # Silly AI Stuff
-#        elif command_name == "do_nothing":
-#            return "No action performed."
-
         # TODO: Change these to take in a file rather than pasted code, if
         # non-file is given, return instructions "Input should be a python
         # filepath, write your code to file and try again"
@@ -217,6 +215,12 @@ def execute_command(command_name: str, arguments):
                     " shell commands, EXECUTE_LOCAL_COMMANDS must be set to 'True' "
                     "in your config. Do not attempt to bypass the restriction."
                 )
+        elif command_name == "read_audio_from_file":
+            return read_audio_from_file(arguments["file"])
+        elif command_name == "send_tweet":
+            return send_tweet(arguments['text'])
+        elif command_name == "do_nothing":
+            return "No action performed."
         elif command_name == "task_complete":
             shutdown()
         elif command_name == "help":
