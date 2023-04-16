@@ -50,7 +50,7 @@ def get_prompt() -> str:
     )
 
     # Define the command list
-    commands = [
+    get_prompt.commands = [
         ("Google Search", "google", {"input": "<search>"}),
         (
             "Browse Website",
@@ -80,7 +80,6 @@ def get_prompt() -> str:
         ),
         ("Write to file", "write_to_file", {"file": "<file>", "text": "<text>"}),
         ("Read file", "read_file", {"file": "<file>"}),
-        ("Write to file", "write_to_file", {"file": "<file>", "text": "<text>"}),
         ("Append to file", "append_to_file", {"file": "<file>", "text": "<text>"}),
         ("Delete file", "delete_file", {"file": "<file>"}),
         ("Copy File", "copy_file", {"source": "<source>", "destination": "<destination>"}),
@@ -92,9 +91,7 @@ def get_prompt() -> str:
         ("Evaluate Resources", "evaluate_resources", {}),
         ("List Directories", "list_resources", {}),
 
-        ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
         ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
-    #    ("Do Nothing", "do_nothing", {}),
         ("Get Filesystem Representation", "get_filesystem_representation", {}),
         ("Evaluate Code", "evaluate_code", {"code": "<full_code_string>"}),
         (
@@ -108,12 +105,13 @@ def get_prompt() -> str:
             {"code": "<full_code_string>", "focus": "<list_of_focus_areas>"},
         ),
         ("Execute Python File", "execute_python_file", {"file": "<file>"}),
-        ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
+        ("Command Help", "help", {"command": "<command>"}),
+        ("List Commands", "list_commands", {}),
     ]
 
     # Only add shell command to the prompt if the AI is allowed to execute it
     if cfg.execute_local_commands:
-        commands.append(
+        get_prompt.commands.append(
             (
                 "Execute Shell Command, non-interactive commands only",
                 "execute_shell",
@@ -125,12 +123,12 @@ def get_prompt() -> str:
     # commands.append(
     #     ("Do Nothing", "do_nothing", {}),
     # )
-    commands.append(
+    get_prompt.commands.append(
         ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
     )
 
     # Add commands to the PromptGenerator object
-    for command_label, command_name, args in commands:
+    for command_label, command_name, args in get_prompt.commands:
         prompt_generator.add_command(command_label, command_name, args)
 
     # Add resources to the PromptGenerator object

@@ -31,6 +31,8 @@ from autogpt.json_fixes.parsing import fix_and_parse_json
 from autogpt.memory import get_memory
 from autogpt.processing.text import summarize_text
 from autogpt.speech import say_text
+from autogpt.help_messages import command_help
+from autogpt.prompt import get_prompt
 
 CFG = Config()
 AGENT_MANAGER = AgentManager()
@@ -217,10 +219,19 @@ def execute_command(command_name: str, arguments):
                 )
         elif command_name == "task_complete":
             shutdown()
+        elif command_name == "help":
+            help_command = cmd_help(arguments["command"])
+            if help_command == "Invalid command or no help available.":
+                return help_command
+            else:
+                print(help_command)
+                return f'Help page for {arguments["command"]}: {help_command}. Respond in JSON with your next command.'
+        elif command_name == "list_commands":
+            return list_commands()
         else:
             return (
-                f"Unknown command '{command_name}'. Please refer to the 'COMMANDS'"
-                " list for available commands and only respond in the specified JSON"
+                f"Unknown command '{command_name}'. Please use list_commands to get"
+                " a list of available commands and only respond in the specified JSON"
                 " format."
             )
     except Exception as e:
@@ -333,3 +344,31 @@ def delete_agent(key: str) -> str:
     """
     result = AGENT_MANAGER.delete_agent(key)
     return f"Agent {key} deleted." if result else f"Agent {key} does not exist."
+
+
+def cmd_help(command: str) -> str:
+    """Get help with a command
+    
+    Args:
+        command (str): The command to get help with
+        
+    Returns:
+        str: A help message describing the command
+    """
+    if command in command_help:
+        return(command_help[command])
+    else:
+        return("Invalid command or no help available.")
+
+def list_commands() -> List:
+    """List available commands
+
+    Returns:
+        List: A list of all available commands
+    """
+    command_list = []
+
+    for idx, x in enumerate(get_prompt.commands):
+        command_list.append(get_prompt.commands[idx][1])
+    
+    return command_list
