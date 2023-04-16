@@ -357,7 +357,7 @@ def is_pdf(file_path):
 
 def get_filesystem_representation(path: str = WORKING_DIRECTORY, level: int = 0) -> str:
     """
-    Generate a human-readable representation of a filesystem, starting from the given path.
+    Generate a human-readable one-line JSON-like representation of a filesystem, starting from the given path.
 
     Args:
         path (str, optional): The starting path of the filesystem representation.
@@ -370,21 +370,21 @@ def get_filesystem_representation(path: str = WORKING_DIRECTORY, level: int = 0)
     if not os.path.exists(path):
         return ""
 
+    representation = ""
     entries = sorted(os.listdir(path))
-    file_prefix = "- "
-    dir_prefix = "+ "
-
-    representation = []
+    file_prefix = "file: "
+    dir_prefix = "dir: "
 
     for entry in entries:
         entry_path = os.path.join(path, entry)
         if os.path.isfile(entry_path):
-            representation.append(file_prefix + entry)
+            representation += file_prefix + entry.replace(' ', '_') + ", "
         elif os.path.isdir(entry_path):
-            subdir_representation = get_filesystem_representation(entry_path, level + 1)
-            representation.append(dir_prefix + entry + "(" + subdir_representation + ")")
+            representation += dir_prefix + entry.replace(' ', '_') + " {"
+            representation += get_filesystem_representation(entry_path, level + 1)
+            representation += "}, "
 
-    return ", ".join(representation)
+    return representation.strip().rstrip(',')
 
 
 def handle_file_error(operation: str, filename: str, error: str) -> str:
