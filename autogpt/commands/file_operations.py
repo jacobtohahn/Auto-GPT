@@ -338,21 +338,21 @@ def get_filesystem_representation(path: str = WORKING_DIRECTORY, level: int = 0)
     if not os.path.exists(path):
         return ""
 
-    representation = ""
     entries = sorted(os.listdir(path))
-    indent = ">"
     file_prefix = "- "
     dir_prefix = "+ "
+
+    representation = []
 
     for entry in entries:
         entry_path = os.path.join(path, entry)
         if os.path.isfile(entry_path):
-            representation += indent * level + file_prefix + entry + "\n"
+            representation.append(file_prefix + entry)
         elif os.path.isdir(entry_path):
-            representation += indent * level + dir_prefix + entry + "\n"
-            representation += get_filesystem_representation(entry_path, level + 1)
+            subdir_representation = get_filesystem_representation(entry_path, level + 1)
+            representation.append(dir_prefix + entry + "(" + subdir_representation + ")")
 
-    return representation
+    return ", ".join(representation)
 
 
 def handle_file_error(operation: str, filename: str, error: str) -> str:
