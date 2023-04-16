@@ -4,6 +4,7 @@ import os.path
 from pathlib import Path
 from typing import Generator, List
 import shutil
+from typing import Union
 
 from autogpt.smart_utils import summarize_contents
 
@@ -181,6 +182,7 @@ def ingest_file(
         print(f"Error while ingesting file '{filename}': {str(e)}")
 
 
+# Add find_file as a command in the future
 def find_file(filename: str, path: str = WORKING_DIRECTORY) -> str:
     """Recursively search for a file with the given filename in the filesystem.
 
@@ -260,58 +262,79 @@ def append_to_file(filename: str, text: str) -> str:
         return handle_file_error("append", filename, str(e))
 
 
-def delete_file(filename: str) -> str:
-    """Delete a file
+def delete_file(filename: Union[str, List]) -> str:
+    """Delete a file or list of files
 
     Args:
-        filename (str): The name of the file to delete
+        filename (str, List): The name of the file(s) to delete
 
     Returns:
         str: A message indicating success or failure
     """
-    if check_duplicate_operation("delete", filename):
-        return "Error: File has already been deleted."
-    try:
-        formatted_filename = format_filename(filename)
-        filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
-        os.remove(filepath)
-        log_operation("delete", filepath)
-        return f"File {filename} deleted successfully. Your current files are now: {list_resources()}"
-    except Exception as e:
-        return handle_file_error("delete", filename, str(e))
+    if isinstance(filename, str):
+        filename = [filename]
+    for file in filename:
+        if check_duplicate_operation("delete", file):
+            return "Error: File has already been deleted."
+        try:
+            formatted_filename = format_filename(file)
+            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
+            os.remove(filepath)
+            log_operation("delete", filepath)
+            if isinstance(filename, str):
+                return f"File {file} deleted successfully. Your current files are now: {list_resources()}"
+            else: 
+                continue
+        except Exception as e:
+            return handle_file_error("delete", filename, str(e))
+    return f"Files {filename} deleted successfully. Your current files are now: {list_resources()}"
     
 
-def copy_file(src_filename, dest_directory):
-    try:
-        formatted_src_filename = format_filename(src_filename)
-        src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
-        dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
-        dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
+def copy_file(src_filename: Union[str, List], dest_directory: str):
+    if isinstance(src_filename, str):
+        src_filename = [src_filename]
+    for file in src_filename:
+        try:
+            formatted_src_filename = format_filename(file)
+            src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
+            dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
 
-        if not os.path.exists(dest_directory_path):
-            os.makedirs(dest_directory_path)
+            if not os.path.exists(dest_directory_path):
+                os.makedirs(dest_directory_path)
 
-        shutil.copy2(src_filepath, dest_filepath)
-        log_operation("copy", src_filepath, dest_filepath)
-        return f"File {src_filename} copied successfully. Your current files are now: {list_resources()}"
-    except Exception as e:
-        return "Error: " + str(e)
+            shutil.copy2(src_filepath, dest_filepath)
+            log_operation("copy", src_filepath, dest_filepath)
+            if isinstance(src_filename, str):
+                return f"File {src_filename} copied successfully. Your current files are now: {list_resources()}"
+            else:
+                continue
+        except Exception as e:
+            return "Error: " + str(e)
+    return f"Files {src_filename} copied successfully. Your current files are now: {list_resources()}"
     
-def move_file(src_filename, dest_directory):
-    try:
-        formatted_src_filename = format_filename(src_filename)
-        src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
-        dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
-        dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
+def move_file(src_filename: Union[str, List], dest_directory: str):
+    if isinstance(src_filename, str):
+        src_filename = [src_filename]
+    for file in src_filename:
+        try:
+            formatted_src_filename = format_filename(file)
+            src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
+            dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
 
-        if not os.path.exists(dest_directory_path):
-            os.makedirs(dest_directory_path)
+            if not os.path.exists(dest_directory_path):
+                os.makedirs(dest_directory_path)
 
-        os.rename(src_filepath, dest_filepath)
-        log_operation("move", src_filepath, dest_filepath)
-        return f"File {src_filename} moved successfully. Your current files are now: {list_resources()}"
-    except Exception as e:
-        return "Error: " + str(e)
+            os.rename(src_filepath, dest_filepath)
+            log_operation("move", src_filepath, dest_filepath)
+            if isinstance(src_filename, str):
+                return f"File {file} moved successfully. Your current files are now: {list_resources()}"
+            else:
+                continue
+        except Exception as e:
+            return "Error: " + str(e)
+    return f"Files {src_filename} moved successfully. Your current files are now: {list_resources()}"
 
 def rename_file(old_filename, new_filename):
     try:

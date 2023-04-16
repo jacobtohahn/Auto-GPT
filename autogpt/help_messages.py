@@ -79,30 +79,30 @@ command_help = {
     ),
     "delete_file": (
         "COMMAND: Delete File\n"
-        "DESCRIPTION: Delete a specified file\n"
+        "DESCRIPTION: Delete a file or list of files\n"
         "ARGUMENTS:\n"
-        "File (str): The path to the file to delete\n"
+        "File (str, List): The path(s) to the file(s) to delete\n"
         "EXAMPLE: {'name': 'delete_file', 'args': {'file': '/path/to/file.txt'}}"
     ),
     "copy_file": (
         "COMMAND: Copy File\n"
-        "DESCRIPTION: Copy a file from one location to another\n"
+        "DESCRIPTION: Copy a file or list of files from one location to another\n"
         "ARGUMENTS:\n"
-        "Source (str): The path to the source file\n"
+        "Source (str, List): The path(s) to the source file(s)\n"
         "Destination (str): The path to the destination file\n"
         "EXAMPLE: {'name': 'copy_file', 'args': {'source': '/path/to/source.txt', 'destination': '/path/to/destination.txt'}}"
     ),
     "move_file": (
         "COMMAND: Move File\n"
-        "DESCRIPTION: Move a file from one location to another\n"
+        "DESCRIPTION: Move a file or list of files from one location to another\n"
         "ARGUMENTS:\n"
-        "Source (str): The path to the source file\n"
+        "Source (str, List): The path(s) to the source file(s)\n"
         "Destination (str): The path to the destination file\n"
         "EXAMPLE: {'name': 'move_file', 'args': {'source': '/path/to/source.txt', 'destination': '/path/to/destination.txt'}}"
     ),
     "rename_file": (
         "COMMAND: Rename File\n"
-        "DESCRIPTION: Rename a file\n"
+        "DESCRIPTION: Rename a file or list of files\n"
         "ARGUMENTS:\n"
         "Source (str): The path to the source file\n"
         "Destination (str): The path to the renamed file\n"

@@ -81,9 +81,9 @@ def get_prompt() -> str:
         ("Write to file", "write_to_file", {"file": "<file>", "text": "<text>"}),
         ("Read file", "read_file", {"file": "<file>"}),
         ("Append to file", "append_to_file", {"file": "<file>", "text": "<text>"}),
-        ("Delete file", "delete_file", {"file": "<file>"}),
-        ("Copy File", "copy_file", {"source": "<source>", "destination": "<destination>"}),
-        ("Move File", "move_file", {"source": "<source>", "destination": "<destination>"}),
+        ("Delete file(s)", "delete_file", {"file": "<file>"}),
+        ("Copy File(s)", "copy_file", {"source": "<source>", "destination": "<destination>"}),
+        ("Move File(s)", "move_file", {"source": "<source>", "destination": "<destination>"}),
         ("Rename File", "rename_file", {"source": "<source>", "destination": "<destination>"}),
         ("Search Files", "search_files", {"directory": "<directory>"}),
 
