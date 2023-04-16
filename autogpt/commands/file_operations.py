@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Generator, List
 import shutil
 from typing import Union
+import glob
 
 from autogpt.smart_utils import summarize_contents
 
@@ -271,81 +272,84 @@ def delete_file(filename: Union[str, List]) -> str:
     Returns:
         str: A message indicating success or failure
     """
-    if isinstance(filename, str):
-        filename = [filename]
-    for file in filename:
-        if check_duplicate_operation("delete", file):
-            return "Error: File has already been deleted."
-        try:
+    try:
+        if isinstance(filename, str):
+            filename = [filename]
+        files_deleted = []
+        for file in filename:
+            if check_duplicate_operation("delete", file):
+                return "Error: File has already been deleted."
             formatted_filename = format_filename(file)
-            filepath = safe_join(WORKING_DIRECTORY, formatted_filename)
-            os.remove(filepath)
-            log_operation("delete", filepath)
-            if isinstance(filename, str):
-                return f"File {file} deleted successfully. Your current files are now: {list_resources()}"
-            else: 
-                continue
-        except Exception as e:
-            return handle_file_error("delete", filename, str(e))
-    return f"Files {filename} deleted successfully. Your current files are now: {list_resources()}"
-    
+            filepath_pattern = safe_join(WORKING_DIRECTORY, formatted_filename)
+            matching_files = glob.glob(filepath_pattern)
+            if len(matching_files) == 0:
+                return f"Error: File {file} not found."
+            for filepath in matching_files:
+                os.remove(filepath)
+                log_operation("delete", filepath)
+                files_deleted.append(os.path.basename(filepath))
+        return f"Files {files_deleted} deleted successfully. Your current files are now: {list_resources()}"
+    except Exception as e:
+        return "Error: " + str(e)
 
 def copy_file(src_filename: Union[str, List], dest_directory: str):
-    if isinstance(src_filename, str):
-        src_filename = [src_filename]
-    for file in src_filename:
-        try:
+    try:
+        if isinstance(src_filename, str):
+            src_filename = [src_filename]
+        files_copied = []
+        for file in src_filename:
             formatted_src_filename = format_filename(file)
-            src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            src_filepath_pattern = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            matching_files = glob.glob(src_filepath_pattern)
+            if len(matching_files) == 0:
+                return f"Error: File {file} not found."
             dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
-            dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
-
             if not os.path.exists(dest_directory_path):
                 os.makedirs(dest_directory_path)
-
-            shutil.copy2(src_filepath, dest_filepath)
-            log_operation("copy", src_filepath, dest_filepath)
-            if isinstance(src_filename, str):
-                return f"File {src_filename} copied successfully. Your current files are now: {list_resources()}"
-            else:
-                continue
-        except Exception as e:
-            return "Error: " + str(e)
-    return f"Files {src_filename} copied successfully. Your current files are now: {list_resources()}"
+            for src_filepath in matching_files:
+                dest_filepath = safe_join(dest_directory_path, os.path.basename(src_filepath))
+                shutil.copy2(src_filepath, dest_filepath)
+                log_operation("copy", src_filepath, dest_filepath)
+                files_copied.append(os.path.basename(src_filepath))
+        return f"Files {files_copied} copied successfully. Your current files are now: {list_resources()}"
+    except Exception as e:
+        return "Error: " + str(e)
     
 def move_file(src_filename: Union[str, List], dest_directory: str):
-    if isinstance(src_filename, str):
-        src_filename = [src_filename]
-    for file in src_filename:
-        try:
+    try:
+        if isinstance(src_filename, str):
+            src_filename = [src_filename]
+        files_moved = []
+        for file in src_filename:
             formatted_src_filename = format_filename(file)
-            src_filepath = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            src_filepath_pattern = safe_join(WORKING_DIRECTORY, formatted_src_filename)
+            matching_files = glob.glob(src_filepath_pattern)
+            if len(matching_files) == 0:
+                return f"Error: File {file} not found."
             dest_directory_path = safe_join(WORKING_DIRECTORY, dest_directory)
-            dest_filepath = safe_join(dest_directory_path, os.path.basename(formatted_src_filename))
-
             if not os.path.exists(dest_directory_path):
                 os.makedirs(dest_directory_path)
-
-            os.rename(src_filepath, dest_filepath)
-            log_operation("move", src_filepath, dest_filepath)
-            if isinstance(src_filename, str):
-                return f"File {file} moved successfully. Your current files are now: {list_resources()}"
-            else:
-                continue
-        except Exception as e:
-            return "Error: " + str(e)
-    return f"Files {src_filename} moved successfully. Your current files are now: {list_resources()}"
+            for src_filepath in matching_files:
+                dest_filepath = safe_join(dest_directory_path, os.path.basename(src_filepath))
+                os.rename(src_filepath, dest_filepath)
+                log_operation("move", src_filepath, dest_filepath)
+                files_moved.append(os.path.basename(src_filepath))
+        return f"Files {files_moved} moved successfully. Your current files are now: {list_resources()}"
+    except Exception as e:
+        return "Error: " + str(e)
 
 def rename_file(old_filename, new_filename):
     try:
         old_formatted_filename = format_filename(old_filename)
         new_formatted_filename = format_filename(new_filename)
-        old_filepath = safe_join(WORKING_DIRECTORY, old_formatted_filename)
+        old_filepath_pattern = safe_join(WORKING_DIRECTORY, old_formatted_filename)
+        matching_files = glob.glob(old_filepath_pattern)
+        if len(matching_files) == 0:
+            return f"Error: File {old_filename} not found."
         new_filepath = safe_join(WORKING_DIRECTORY, new_formatted_filename)
-
-        os.rename(old_filepath, new_filepath)
-        log_operation("rename", old_filepath, new_filepath)
-        return f"File {old_filename} renamed successfully. Your current files are now: {list_resources()}"
+        os.rename(matching_files[0], new_filepath)
+        log_operation("rename", matching_files[0], new_filepath)
+        return f"File {old_filename} renamed to {new_filename} successfully. Your current files are now: {list_resources()}"
     except Exception as e:
         return "Error: " + str(e)
 
