@@ -47,7 +47,7 @@ def log_operation(operation: str, filename: str) -> None:
 
     # Create the log file if it doesn't exist
     if not os.path.exists(LOG_FILE_PATH):
-        with open(LOG_FILE_PATH, "w", encoding="utf-8") as f:
+        with open(LOG_FILE_PATH, "w+", encoding="utf-8") as f:
             f.write("File Operation Logger ")
 
     append_to_file(LOG_FILE, log_entry)
