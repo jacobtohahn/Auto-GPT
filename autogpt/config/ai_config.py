@@ -6,6 +6,7 @@ import os
 from typing import List, Optional, Type
 import yaml
 
+from autogpt.commands.file_operations import list_resources
 
 class AIConfig:
     """
@@ -115,4 +116,5 @@ class AIConfig:
             full_prompt += f"{i+1}. {goal}\n"
 
         full_prompt += f"\n\n{get_prompt()}"
+        full_prompt += f"Your current files are:\n{list_resources()}"
         return full_prompt

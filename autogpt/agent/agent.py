@@ -65,7 +65,7 @@ class Agent:
             with Spinner("Thinking... "):
                 assistant_reply = chat_with_ai(
                     self.prompt,
-                    self.user_input+ f". Your current files are: {str(list_resources())}",
+                    self.user_input,
                     self.full_message_history,
                     self.memory,
                     cfg.fast_token_limit,
