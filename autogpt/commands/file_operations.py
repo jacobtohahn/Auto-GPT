@@ -106,7 +106,7 @@ def read_file(filename: str) -> str:
                 content = f.read()
             return content
     except Exception as e:
-        return f"Error: {str(e)}"
+        return handle_file_error("read", filename, str(e))
 
 
 def ingest_file(
@@ -163,7 +163,7 @@ def write_to_file(filename: str, text: str) -> str:
             f.write(text)
         return "File " + filename + " written to successfully."
     except Exception as e:
-        return f"Error: {str(e)}"
+        return handle_file_error("write", filename, str(e))
 
 
 def append_to_file(filename: str, text: str) -> str:
@@ -183,7 +183,7 @@ def append_to_file(filename: str, text: str) -> str:
             f.write(text)
         return "Text appended to " + filename + " successfully."
     except Exception as e:
-        return f"Error: {str(e)}"
+        return handle_file_error("append", filename, str(e))
 
 
 def delete_file(filename: str) -> str:
@@ -232,7 +232,7 @@ def move_file(src_filename, dest_directory):
         os.rename(src_filepath, dest_filepath)
         return "File moved successfully."
     except Exception as e:
-        return f"Error: {str(e)}"
+        return handle_file_error("delete", filename, str(e))
 
 def rename_file(old_filename, new_filename):
     try:
@@ -322,3 +322,52 @@ def is_pdf(file_path):
     with open(file_path, 'rb') as file:
         file_header = file.read(5)
     return file_header == b'%PDF-'
+
+def get_filesystem_representation(path: str = WORKING_DIRECTORY, level: int = 0) -> str:
+    """
+    Generate a human-readable representation of a filesystem, starting from the given path.
+
+    Args:
+        path (str, optional): The starting path of the filesystem representation.
+        Defaults to WORKING_DIRECTORY.
+        level (int, optional): The current level of indentation. Defaults to 0.
+
+    Returns:
+        str: The filesystem representation as a formatted string.
+    """
+    if not os.path.exists(path):
+        return ""
+
+    representation = ""
+    entries = sorted(os.listdir(path))
+    indent = ">"
+    file_prefix = "- "
+    dir_prefix = "+ "
+
+    for entry in entries:
+        entry_path = os.path.join(path, entry)
+        if os.path.isfile(entry_path):
+            representation += indent * level + file_prefix + entry + "\n"
+        elif os.path.isdir(entry_path):
+            representation += indent * level + dir_prefix + entry + "\n"
+            representation += get_filesystem_representation(entry_path, level + 1)
+
+    return representation
+
+
+def handle_file_error(operation: str, filename: str, error: str) -> str:
+    """
+    Handle file-related errors by printing a message with the current filesystem and the error.
+
+    Args:
+        operation (str): The operation being performed on the file.
+        filename (str): The filename involved in the error.
+        error (str): The error message.
+
+    Returns:
+        str: The full error message containing the operation, filename, error, and current filesystem.
+    """
+    current_filesystem = get_filesystem_representation(WORKING_DIRECTORY)
+    error_message = f"Error trying to {operation} {filename} - File likely doesn't exist. Current filesystem:\n{current_filesystem}\nError: {error}"
+    print(error_message)
+    return error_message
