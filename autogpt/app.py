@@ -25,7 +25,7 @@ from autogpt.commands.file_operations import (
     create_directory,
     remove_directory,
     move_directory,
-    summarize_resources
+    summarize_resources,
     download_file
 )
 from autogpt.commands.git_operations import clone_repository
