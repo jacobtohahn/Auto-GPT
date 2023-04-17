@@ -84,10 +84,12 @@ def get_prompt() -> str:
         ("Delete file(s)", "delete_file", {"file": "<file>"}),
         ("Copy File(s)", "copy_file", {"source": "<source>", "destination": "<destination>"}),
         ("Move File(s)", "move_file", {"source": "<source>", "destination": "<destination>"}),
-        ("Rename File", "rename_file", {"source": "<source>", "destination": "<destination>"}),
-        ("Search Files", "search_files", {"directory": "<directory>"}),
+        ("Rename File(s)", "rename_file", {"source": "<source>", "destination": "<destination>"}),
+        ("Search Files", "search_files", {"directory": "<directory>", "search_phrase": "<search_phrase>"}),
 
         ("Create Directory", "create_directory", {"directory": "<directory>"}),
+        ("Remove Directory", "remove_directory", {"directory": "<directory>"}),
+        ("Move Directory", "move_directory", {"src_directory": "<directory>", "dest_directory":"<directory>"}),
         ("Evaluate Resources", "evaluate_resources", {}),
         ("List Directories", "list_resources", {}),
 

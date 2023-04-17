@@ -23,6 +23,8 @@ from autogpt.commands.file_operations import (
     copy_file,
     move_file,
     create_directory,
+    remove_directory,
+    move_directory,
     summarize_resources
 )
 from autogpt.commands.git_operations import clone_repository
@@ -190,9 +192,13 @@ def execute_command(command_name: str, arguments):
         elif command_name == "rename_file":
             return rename_file(arguments["source"], arguments["destination"])
         elif command_name == "search_files":
-            return search_files(arguments["directory"])
+            return search_files(arguments["directory"], arguments["search_phrase"])
         elif command_name == "create_directory":
             return create_directory(arguments["directory"])
+        elif command_name == "remove_directory":
+            return remove_directory(arguments["directory"])
+        elif command_name == "move_directory":
+            return move_directory(arguments["src_directory"], arguments["dest_directory"])
         elif command_name == "list_resources":
             return list_resources()
         elif command_name == "evaluate_resources":

@@ -1,5 +1,7 @@
 """Command Help Message Dictionary"""
 
+# TODO: Update help messages for create directory, move, copy, delete, rename, check others
+
 command_help = {
     "google": (
         "COMMAND: Google Search\n"

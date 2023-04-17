@@ -7,18 +7,15 @@ from pathlib import Path
 from autogpt.workspace import path_in_workspace, WORKSPACE_PATH
 from typing import Generator, List, Union
 import shutil
-import glob
+import fnmatch
 
 from autogpt.smart_utils import summarize_contents
 
 from pdfminer.high_level import extract_text
 
-# Set a dedicated folder for file I/O
-WORKING_DIRECTORY = Path(os.getcwd()) / "auto_gpt_workspace"
-
 # Create the directory if it doesn't exist
-if not os.path.exists(WORKING_DIRECTORY):
-    os.makedirs(WORKING_DIRECTORY)
+if not os.path.exists(WORKSPACE_PATH):
+    os.makedirs(WORKSPACE_PATH)
 
 LOG_FILE = "file_logger.txt"
 LOG_FILE_PATH = WORKSPACE_PATH / LOG_FILE
@@ -57,26 +54,8 @@ def log_operation(operation: str, filename: str, filename2: str = None) -> None:
         with open(LOG_FILE_PATH, "w", encoding="utf-8") as f:
             f.write("File Operation Logger ")
 
-    append_to_file(LOG_FILE, log_entry, shouldLog = False)
+    append_to_file(LOG_FILE, log_entry, shouldLog = True)
 
-
-def safe_join(base: str, *paths) -> str:
-    """Join one or more path components intelligently.
-
-    Args:
-        base (str): The base path
-        *paths (str): The paths to join to the base path
-
-    Returns:
-        str: The joined path
-    """
-    new_path = os.path.join(base, *paths)
-    norm_new_path = os.path.normpath(new_path)
-
-    if os.path.commonprefix([base, norm_new_path]) != base:
-        raise ValueError("Attempted to access outside of working directory.")
-
-    return norm_new_path
 
 # Ensure lower_snake_case filenames
 def format_filename(filename):
@@ -184,12 +163,12 @@ def ingest_file(
 
 
 # Add find_file as a command in the future
-def find_file(filename: str, path: str = WORKING_DIRECTORY) -> str:
+def find_file(filename: str, path: str = WORKSPACE_PATH) -> str:
     """Recursively search for a file with the given filename in the filesystem.
 
     Args:
         filename (str): The name of the file to search for.
-        path (str, optional): The path to start the search from. Defaults to WORKING_DIRECTORY.
+        path (str, optional): The path to start the search from. Defaults to WORKSPACE_PATH.
 
     Returns:
         str: The path to the found file or an empty string if the file is not found.
@@ -199,6 +178,15 @@ def find_file(filename: str, path: str = WORKING_DIRECTORY) -> str:
             return os.path.join(root, filename)
 
     return ""
+
+
+def find_files(pattern: str, path: str = WORKSPACE_PATH) -> List[str]:
+    matched_files = []
+    for root, _, files in os.walk(path):
+        for filename in files:
+            if fnmatch.fnmatch(filename, pattern):
+                matched_files.append(os.path.join(root, filename))
+    return matched_files
 
 
 def write_to_file(filename: str, text: str) -> str:
@@ -215,12 +203,13 @@ def write_to_file(filename: str, text: str) -> str:
         return "Error: File has already been updated."
     try:
         formatted_filename = format_filename(filename)
+        filepath = path_in_workspace(formatted_filename)
         existing_filepath = find_file(formatted_filename)
 
-        if existing_filepath:
-            return f"A file with that name already exists in a different location: {path_in_workspace(formatted_filename)}. Use append_to_file instead."
+        if existing_filepath and (filepath != path_in_workspace(existing_filepath)):
+            print(filepath)
+            return f"A file with that name already exists in a different location: {existing_filepath}. Use append_to_file instead."
         else:
-            filepath = path_in_workspace(formatted_filename)
             directory = os.path.dirname(filepath)
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -248,8 +237,8 @@ def append_to_file(filename: str, text: str, shouldLog: bool = True) -> str:
         filepath = path_in_workspace(formatted_filename)
         existing_filepath = find_file(formatted_filename)
 
-        if existing_filepath:
-            return f"A file with that name already exists in a different location: {path_in_workspace(formatted_filename)}"
+        if existing_filepath and (filepath != path_in_workspace(existing_filepath)):
+            return f"A file with that name already exists in a different location: {existing_filepath}"
         else:
             directory = os.path.dirname(filepath)
             if not os.path.exists(directory):
@@ -258,7 +247,7 @@ def append_to_file(filename: str, text: str, shouldLog: bool = True) -> str:
         with open(filepath, "a") as f:
             f.write(text)
 
-        if shouldLog:
+        if shouldLog and (filename != "file_logger.txt"):
             log_operation("append", filepath)
 
         return f"Text appended to {filename} successfully. Your current files are now: {list_resources()}"
@@ -267,135 +256,209 @@ def append_to_file(filename: str, text: str, shouldLog: bool = True) -> str:
 
 
 def delete_file(filename: Union[str, List]) -> str:
-    """Delete a file or list of files
-
-    Args:
-        filename (str, List): The name of the file(s) to delete
-
-    Returns:
-        str: A message indicating success or failure
-    """
     try:
         if isinstance(filename, str):
             filename = [filename]
         files_deleted = []
+        errors = []
         for file in filename:
             if check_duplicate_operation("delete", file):
-                return "Error: File has already been deleted."
+                errors.append(f"Error: File {file} has already been deleted.")
+                continue
             formatted_filename = format_filename(file)
-            filepath_pattern = safe_join(WORKING_DIRECTORY, formatted_filename)
-            matching_files = glob.glob(filepath_pattern)
-            if len(matching_files) == 0:
-                return f"Error: File {file} not found."
-            for filepath in matching_files:
-                os.remove(filepath)
-                log_operation("delete", filepath)
-                files_deleted.append(os.path.basename(filepath))
-        return f"Files {files_deleted} deleted successfully. Your current files are now: {list_resources()}"
+            found_filepaths = find_files(formatted_filename)
+            if not found_filepaths:
+                errors.append(f"Error: File {file} not found.")
+                continue
+            for found_filepath in found_filepaths:
+                os.remove(found_filepath)
+                log_operation("delete", found_filepath)
+                files_deleted.append(os.path.basename(found_filepath))
+
+        response = f"Files {files_deleted} deleted successfully. Your current files are now: {list_resources()}"
+        if errors:
+            response += f"\nErrors encountered:\n" + "\n".join(errors)
+        return response
     except Exception as e:
-        return "Error: " + str(e)
+        return handle_file_error("delete", filename, str(e))
 
 def copy_file(src_filename: Union[str, List], dest_directory: str):
     try:
         if isinstance(src_filename, str):
             src_filename = [src_filename]
         files_copied = []
+        errors = []
         for file in src_filename:
             formatted_src_filename = format_filename(file)
-            src_filepath_pattern = path_in_workspace(formatted_src_filename)
-            matching_files = glob.glob(src_filepath_pattern)
-            if len(matching_files) == 0:
-                return f"Error: File {file} not found."
-            dest_directory_path = path_in_workspace(dest_directory)
+            found_filepaths = find_files(formatted_src_filename)
+            if not found_filepaths:
+                errors.append(f"Error: File {file} not found.")
+                continue
+            dest_directory_path = os.path.join(WORKSPACE_PATH, path_in_workspace(dest_directory))
             if not os.path.exists(dest_directory_path):
                 os.makedirs(dest_directory_path)
-            for src_filepath in matching_files:
-                dest_filepath = safe_join(dest_directory_path, os.path.basename(src_filepath))
-                shutil.copy2(src_filepath, dest_filepath)
-                log_operation("copy", src_filepath, dest_filepath)
-                files_copied.append(os.path.basename(src_filepath))
-        return f"Files {files_copied} copied successfully. Your current files are now: {list_resources()}"
+            for found_filepath in found_filepaths:
+                dest_filepath = os.path.join(dest_directory_path, os.path.basename(found_filepath))
+                shutil.copy2(found_filepath, dest_filepath)
+                log_operation("copy", found_filepath, dest_filepath)
+                files_copied.append(os.path.basename(found_filepath))
+
+        response = f"Files {files_copied} copied successfully. Your current files are now: {list_resources()}"
+        if errors:
+            response += f"\nErrors encountered:\n" + "\n".join(errors)
+        return response
     except Exception as e:
-        return "Error: " + str(e)
+        return handle_file_error("copy", src_filename, str(e))
     
 def move_file(src_filename: Union[str, List], dest_directory: str):
     try:
         if isinstance(src_filename, str):
             src_filename = [src_filename]
         files_moved = []
+        errors = []
         for file in src_filename:
             formatted_src_filename = format_filename(file)
-            src_filepath_pattern = path_in_workspace(formatted_src_filename)
-            matching_files = glob.glob(src_filepath_pattern)
-            if len(matching_files) == 0:
-                return f"Error: File {file} not found."
-            dest_directory_path = path_in_workspace(dest_directory)
+            found_filepaths = find_files(formatted_src_filename)
+            if not found_filepaths:
+                errors.append(f"Error: File {file} not found.")
+                continue
+            dest_directory_path = os.path.join(WORKSPACE_PATH, path_in_workspace(dest_directory))
             if not os.path.exists(dest_directory_path):
                 os.makedirs(dest_directory_path)
-            for src_filepath in matching_files:
-                dest_filepath = safe_join(dest_directory_path, os.path.basename(src_filepath))
-                os.rename(src_filepath, dest_filepath)
-                log_operation("move", src_filepath, dest_filepath)
-                files_moved.append(os.path.basename(src_filepath))
-        return f"Files {files_moved} moved successfully. Your current files are now: {list_resources()}"
-    except Exception as e:
-        return "Error: " + str(e)
+            for found_filepath in found_filepaths:
+                dest_filepath = os.path.join(dest_directory_path, os.path.basename(found_filepath))
+                os.rename(found_filepath, dest_filepath)
+                log_operation("move", found_filepath, dest_filepath)
+                files_moved.append(os.path.basename(found_filepath))
 
-def rename_file(old_filename, new_filename):
+        response = f"Files {files_moved} moved successfully. Your current files are now: {list_resources()}"
+        if errors:
+            response += f"\nErrors encountered:\n" + "\n".join(errors)
+        return response
+    except Exception as e:
+        return handle_file_error("move", src_filename, str(e))
+
+def rename_file(old_filenames: Union[str, List], new_filenames: Union[str, List]) -> str:
     try:
-        old_formatted_filename = format_filename(old_filename)
-        new_formatted_filename = format_filename(new_filename)
-        old_filepath_pattern = path_in_workspace(old_formatted_filename)
-        matching_files = glob.glob(old_filepath_pattern)
-        if len(matching_files) == 0:
-            return f"Error: File {old_filename} not found."
-        new_filepath = path_in_workspace(new_formatted_filename)
-        os.rename(matching_files[0], new_filepath)
-        log_operation("rename", matching_files[0], new_filepath)
-        return f"File {old_filename} renamed to {new_filename} successfully. Your current files are now: {list_resources()}"
-    except Exception as e:
-        return "Error: " + str(e)
+        if isinstance(old_filenames, str):
+            old_filenames = [old_filenames]
+        if isinstance(new_filenames, str):
+            new_filenames = [new_filenames]
 
-def search_files(directory: str) -> list[str]:
-    """Search for files in a directory
+        if len(old_filenames) != len(new_filenames):
+            return "Error: The number of old filenames and new filenames must be the same."
 
-    Args:
-        directory (str): The directory to search in
+        files_renamed = []
+        errors = []
 
-    Returns:
-        list[str]: A list of files found in the directory
-    """
-    found_files = []
-
-    if directory in {"", "/"}:
-        search_directory = WORKSPACE_PATH
-    else:
-        search_directory = path_in_workspace(directory)
-
-    if not os.path.isdir(search_directory):
-        return "Error: directory does not exist"
-
-    for root, _, files in os.walk(search_directory):
-        for file in files:
-            if file.startswith("."):
+        for old_filename, new_filename in zip(old_filenames, new_filenames):
+            old_formatted_filename = format_filename(old_filename)
+            new_formatted_filename = format_filename(new_filename)
+            found_filepaths = find_files(old_formatted_filename)
+            if not found_filepaths:
+                errors.append(f"Error: File {old_filename} not found.")
                 continue
-            relative_path = os.path.relpath(os.path.join(root, file), WORKSPACE_PATH)
-            found_files.append(relative_path)
 
-    return found_files
+            for found_filepath in found_filepaths:
+                new_filepath = os.path.join(os.path.dirname(found_filepath), new_formatted_filename)
+                os.rename(found_filepath, new_filepath)
+                log_operation("rename", found_filepath, new_filepath)
+                files_renamed.append((old_filename, new_filename))
 
-def create_directory(directory):
-    try:
-        dir_path = safe_join(WORKING_DIRECTORY, directory)
-        os.makedirs(dir_path, exist_ok=True)
-        log_operation("mkdir", dir_path)
-        return f"Directory '{directory}' created successfully. Your current files are now: {list_resources()}"
+        response = f"Files {files_renamed} renamed successfully. Your current files are now: {list_resources()}"
+        if errors:
+            response += f"\nErrors encountered:\n" + "\n".join(errors)
+        return response
     except Exception as e:
-        return "Error: " + str(e)
+        return handle_file_error("rename", old_filenames, str(e))
+
+def search_files(directory: str, search_phrase: str) -> list[str]:
+    try:
+        """Search for files in a directory containing the search_phrase
+
+        Args:
+            directory (str): The directory to search in
+            search_phrase (str): The search phrase or wildcard pattern to match
+
+        Returns:
+            list[str]: A list of files found in the directory containing the search phrase
+        """
+
+        if directory in {"", "/", ".", "./"}:
+            search_directory = WORKSPACE_PATH
+        else:
+            search_directory = path_in_workspace(directory)
+
+        if not os.path.isdir(search_directory):
+            return "Error: directory does not exist"
+
+        found_files = find_files(search_directory)
+
+        return found_files
+    except Exception as e:
+        return handle_file_error("search", directory, str(e))
+
+
+def create_directory(directory: Union[str, List]):
+    try:
+        if isinstance(directory, str):
+            directory = [directory]
+        directories_created = []
+        for dir in directory:
+            dir = format_filename(dir)
+            dir_path = path_in_workspace(dir)
+            os.makedirs(dir_path, exist_ok=True)
+            directories_created.append(os.path.basename(dir))
+        return f"Directories '{directories_created}' created successfully. Your current files are now: {list_resources()}"
+    except Exception as e:
+        return handle_file_error("create", directory, str(e))
+    
+def remove_directory(directory: Union[str, List]):
+    try:
+        if isinstance(directory, str):
+            directory = [directory]
+        directories_removed = []
+        errors = []
+        for dir in directory:
+            dir = format_filename(dir)
+            dir_path = path_in_workspace(dir)
+            if not os.path.isdir(dir_path):
+                errors.append(dir)
+            os.removedirs(dir_path)
+            directories_removed.append(os.path.basename(dir))
+        response = f"Directories '{directories_removed}' removed successfully. Your current files are now: {list_resources()}"
+        if errors:
+            response += f"\nErrors encountered:\n" + "\n".join(errors)
+        return response
+    except Exception as e:
+        return handle_file_error("remove", directory, str(e))
+
+def move_directory(src_directory: Union[str, List], dest_directory: str):
+    try:
+        if isinstance(src_directory, str):
+            src_directory = [src_directory]
+
+            dirs_moved = []
+            errors = []
+
+            for dir in src_directory:
+                dir = format_filename(dir)
+                src_path = path_in_workspace(dir)
+                dest_path = path_in_workspace(dest_directory)
+                if not os.path.isdir(src_path):
+                    errors.append(dir)
+                shutil.move(src_path, dest_path)
+                dirs_moved.append(os.path.basename(dir))
+            response = f"Directories '{dirs_moved}' moved successfully. Your current files are now: {list_resources()}"
+            if errors:
+                response += f"\nErrors encountered:\n" + "\n".join(errors)
+            return response
+    except Exception as e:
+        return handle_file_error("move", src_directory, str(e))
 
 def list_resources(directory=None):
     if directory is None:
-        directory = WORKING_DIRECTORY
+        directory = WORKSPACE_PATH
         
     resource_list = []
 
@@ -417,7 +480,7 @@ def resources_to_string(resource_list):
     return resources_string
 
 def summarize_resources():
-    return f"Summary of contents:\n{summarize_contents(WORKING_DIRECTORY)}\n\nResource file map:\n{(list_resources())}"
+    return f"Summary of contents:\n{summarize_contents(WORKSPACE_PATH)}\n\nResource file map:\n{(list_resources())}"
 
 def get_directory_summary(directory):
     summary = []
@@ -434,13 +497,13 @@ def is_pdf(file_path):
         file_header = file.read(5)
     return file_header == b'%PDF-'
 
-def get_filesystem_representation(path: str = WORKING_DIRECTORY, level: int = 0) -> str:
+def get_filesystem_representation(path: str = WORKSPACE_PATH, level: int = 0) -> str:
     """
     Generate a human-readable one-line JSON-like representation of a filesystem, starting from the given path.
 
     Args:
         path (str, optional): The starting path of the filesystem representation.
-        Defaults to WORKING_DIRECTORY.
+        Defaults to WORKSPACE_PATH.
         level (int, optional): The current level of indentation. Defaults to 0.
 
     Returns:
@@ -459,9 +522,10 @@ def get_filesystem_representation(path: str = WORKING_DIRECTORY, level: int = 0)
         if os.path.isfile(entry_path):
             representation += file_prefix + entry.replace(' ', '_') + ", "
         elif os.path.isdir(entry_path):
-            representation += dir_prefix + entry.replace(' ', '_') + " {"
-            representation += get_filesystem_representation(entry_path, level + 1)
-            representation += "}, "
+            if len(entries) > 0:
+                representation += dir_prefix + entry.replace(' ', '_') + " {"
+                representation += get_filesystem_representation(entry_path, level + 1)
+                representation += "}, "
 
     return representation.strip().rstrip(',')
 
@@ -478,7 +542,7 @@ def handle_file_error(operation: str, filename: str, error: str) -> str:
     Returns:
         str: The full error message containing the operation, filename, error, and current filesystem.
     """
-    current_filesystem = get_filesystem_representation(WORKING_DIRECTORY)
+    current_filesystem = get_filesystem_representation(WORKSPACE_PATH)
     error_message = f"Error trying to {operation} {filename} - File likely doesn't exist. Current filesystem:\n{current_filesystem}\nError: {error}"
     print(error_message)
     return error_message
