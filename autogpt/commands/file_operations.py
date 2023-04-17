@@ -4,8 +4,13 @@ from __future__ import annotations
 import os
 import os.path
 from pathlib import Path
-from autogpt.workspace import path_in_workspace, WORKSPACE_PATH
 from typing import Generator, List, Union
+import requests
+from requests.adapters import HTTPAdapter, Retry
+from colorama import Fore, Back
+from autogpt.spinner import Spinner
+from autogpt.utils import readable_file_size
+from autogpt.workspace import path_in_workspace, WORKSPACE_PATH
 import shutil
 import fnmatch
 
@@ -16,6 +21,7 @@ from pdfminer.high_level import extract_text
 # Create the directory if it doesn't exist
 if not os.path.exists(WORKSPACE_PATH):
     os.makedirs(WORKSPACE_PATH)
+
 
 LOG_FILE = "file_logger.txt"
 LOG_FILE_PATH = WORKSPACE_PATH / LOG_FILE
@@ -546,3 +552,43 @@ def handle_file_error(operation: str, filename: str, error: str) -> str:
     error_message = f"Error trying to {operation} {filename} - File likely doesn't exist. Current filesystem:\n{current_filesystem}\nError: {error}"
     print(error_message)
     return error_message
+
+
+def download_file(url, filename):
+    """Downloads a file
+    Args:
+        url (str): URL of the file to download
+        filename (str): Filename to save the file as
+    """
+    safe_filename = path_in_workspace(filename)
+    try:
+        message = f"{Fore.YELLOW}Downloading file from {Back.LIGHTBLUE_EX}{url}{Back.RESET}{Fore.RESET}"
+        with Spinner(message) as spinner:
+            session = requests.Session()
+            retry = Retry(total=3, backoff_factor=1, status_forcelist=[502, 503, 504])
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount('http://', adapter)
+            session.mount('https://', adapter)
+
+            total_size = 0
+            downloaded_size = 0
+
+            with session.get(url, allow_redirects=True, stream=True) as r:
+                r.raise_for_status()
+                total_size = int(r.headers.get('Content-Length', 0))
+                downloaded_size = 0
+
+                with open(safe_filename, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        downloaded_size += len(chunk)
+
+                         # Update the progress message
+                        progress = f"{readable_file_size(downloaded_size)} / {readable_file_size(total_size)}"
+                        spinner.update_message(f"{message} {progress}")
+
+            return f'Successfully downloaded and locally stored file: "{filename}"! (Size: {readable_file_size(total_size)})'
+    except requests.HTTPError as e:
+        return f"Got an HTTP Error whilst trying to download file: {e}"
+    except Exception as e:
+        return "Error: " + str(e)

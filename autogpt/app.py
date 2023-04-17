@@ -26,6 +26,7 @@ from autogpt.commands.file_operations import (
     remove_directory,
     move_directory,
     summarize_resources
+    download_file
 )
 from autogpt.commands.git_operations import clone_repository
 from autogpt.commands.google_search import google_official_search, google_search
@@ -205,6 +206,12 @@ def execute_command(command_name: str, arguments):
             return f"What follows is a summary of all files and folders in the working directory:\n\n{summarize_resources()}"
         elif command_name == "get_filesystem_representation":
             return get_filesystem_representation()
+        elif command_name == "download_file":
+            if not CFG.allow_downloads:
+                return "Error: You do not have user authorization to download files locally."
+            return download_file(arguments["url"], arguments["file"])
+        elif command_name == "browse_website":
+            return browse_website(arguments["url"], arguments["question"])
         # TODO: Change these to take in a file rather than pasted code, if
         # non-file is given, return instructions "Input should be a python
         # filepath, write your code to file and try again"
