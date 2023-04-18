@@ -50,7 +50,7 @@ def log_operation(operation: str, filename: str, filename2: str = None) -> None:
         filename (str): The name of the file the operation was performed on
     """
 
-    if not filename2 == None:
+    if filename2:
         log_entry = f"{operation}: {filename} to {filename2}\n"
     else:
         log_entry = f"{operation}: {filename}\n"
@@ -60,7 +60,7 @@ def log_operation(operation: str, filename: str, filename2: str = None) -> None:
         with open(LOG_FILE_PATH, "w", encoding="utf-8") as f:
             f.write("File Operation Logger ")
 
-    append_to_file(LOG_FILE, log_entry, shouldLog = True)
+    append_to_file(LOG_FILE, log_entry, shouldLog = False)
 
 
 # Ensure lower_snake_case filenames
@@ -79,6 +79,7 @@ def format_filename(filename):
     formatted_filename = os.path.join(directory, file_name)
     
     return formatted_filename
+
 
 def split_file(
     content: str, max_length: int = 4000, overlap: int = 0
@@ -117,11 +118,12 @@ def read_file(filename: str) -> str:
         str: The contents of the file
     """
     try:
-        formatted_filename = format_filename(filename)
-        filepath = path_in_workspace(formatted_filename)
+        filepath = path_in_workspace(filename)
+
         # Check if the file is a PDF and extract text if so
         if is_pdf(filepath):
             text = extract_text(filepath)
+            
             if not text:
                 return "Error: Could not extract text from PDF"
             else:
